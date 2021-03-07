@@ -1,4 +1,4 @@
-package client
+package kubeclient
 
 import (
 	"os"
@@ -37,8 +37,8 @@ func Kubeconfig() (cfg *rest.Config, err error) {
 	return
 }
 
-// Client
-func Client() (k8sClient client.Client, err error)  {
+// KubeClient
+func KubeClient() (k8sClient client.Client, err error)  {
 	var cfg *rest.Config
 	cfg, err = Kubeconfig()
 	if err == nil {
