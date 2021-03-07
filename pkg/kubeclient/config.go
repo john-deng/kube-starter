@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
@@ -38,11 +38,11 @@ func Kubeconfig() (cfg *rest.Config, err error) {
 }
 
 // KubeClient
-func KubeClient() (k8sClient client.Client, err error)  {
+func KubeClient(scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
 	var cfg *rest.Config
 	cfg, err = Kubeconfig()
 	if err == nil {
-		k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
+		k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
 	} else {
 		klog.Fatal(err)
 	}
