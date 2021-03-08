@@ -31,7 +31,7 @@ func Kubeconfig() (cfg *rest.Config, err error) {
 	if err != nil {
 		cfg, err = clientcmd.BuildConfigFromFlags("", DefaultKubeconfig())
 		if err != nil {
-			klog.Fatalf("Error building kubeconfig: %s", err.Error())
+			klog.Warningf("Error building kubeconfig: %s", err.Error())
 		}
 	}
 	return
@@ -43,8 +43,6 @@ func KubeClient(scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
 	cfg, err = Kubeconfig()
 	if err == nil {
 		k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
-	} else {
-		klog.Fatal(err)
 	}
 	return
 }
