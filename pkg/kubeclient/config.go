@@ -62,11 +62,8 @@ func RuntimeKubeClient(ctx context.Context,scheme *runtime.Scheme) (k8sClient cl
 	bearerToken := ctx.GetHeader("Authorization")
 	token := strings.Replace(bearerToken, "Bearer ", "", -1)
 	var claims *jwt.Claims
-	if token != "" {
-		claims, err = jwt.DecodeWithoutVerify(token)
-		if err != nil {
-			return
-		}
+	claims, err = jwt.DecodeWithoutVerify(token)
+	if err == nil {
 		cfg.Impersonate.UserName = claims.Issuer + "#" + claims.Subject
 	} else {
 		// unauthorized user
