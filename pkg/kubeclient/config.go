@@ -54,21 +54,21 @@ func KubeClient(scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
 // RuntimeKubeClient
 func RuntimeKubeClient(ctx context.Context,scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
 	var cfg *rest.Config
-	bearerToken := ctx.GetHeader("Authorization")
-	token := strings.Replace(bearerToken, "Bearer ", "", -1)
-	var claims *jwt.Claims
-	claims, err = jwt.DecodeWithoutVerify(token)
-	if err != nil {
-		return
-	}
-
 	cfg, err = Kubeconfig()
 	if err != nil {
 		return
 	}
 
-	cfg.Impersonate.UserName = claims.Issuer + "#" + claims.Subject
-
+	bearerToken := ctx.GetHeader("Authorization")
+	token := strings.Replace(bearerToken, "Bearer ", "", -1)
+	var claims *jwt.Claims
+	if token != "" {
+		claims, err = jwt.DecodeWithoutVerify(token)
+		if err != nil {
+			return
+		}
+		cfg.Impersonate.UserName = claims.Issuer + "#" + claims.Subject
+	}
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
 	if err != nil {
 		log.Error(err)
