@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hidevopsio/hiboot/pkg/app/web/context"
+	"github.com/hidevopsio/hiboot/pkg/log"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -46,3 +48,38 @@ func KubeClient(scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
 	}
 	return
 }
+
+// RuntimeKubeClient
+func RuntimeKubeClient(ctx context.Context,scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
+	var cfg *rest.Config
+	var defaultConfig *rest.Config
+	bearerToken := ctx.GetHeader("Authorization")
+	//token := strings.Replace(bearerToken, "Bearer ", "", -1)
+	defaultConfig, err = Kubeconfig()
+	if err != nil {
+		return
+	}
+	//cfg, err = Kubeconfig()
+	//if err != nil {
+	//	return
+	//}
+
+	cfg = &rest.Config{
+		Host: defaultConfig.Host,
+		TLSClientConfig: rest.TLSClientConfig{
+			Insecure: true,
+			//CAData: defaultConfig.TLSClientConfig.CAData,
+			//KeyData: defaultConfig.TLSClientConfig.KeyData,
+			//CertData: defaultConfig.TLSClientConfig.CertData,
+		},
+		BearerToken: bearerToken,
+
+	}
+
+	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
+	if err != nil {
+		log.Error(err)
+	}
+	return
+}
+
