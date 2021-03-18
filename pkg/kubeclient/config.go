@@ -68,6 +68,9 @@ func RuntimeKubeClient(ctx context.Context,scheme *runtime.Scheme) (k8sClient cl
 			return
 		}
 		cfg.Impersonate.UserName = claims.Issuer + "#" + claims.Subject
+	} else {
+		// unauthorized user
+		scheme = runtime.NewScheme()
 	}
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
 	if err != nil {
