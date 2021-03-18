@@ -28,12 +28,14 @@ func (c *configuration) Client(scheme *runtime.Scheme) (cli Client) {
 	return
 }
 
+// RuntimeClient
 type RuntimeClient struct {
 	at.ContextAware
 
 	client.Client
 }
 
+// RuntimeClient
 func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme) (cli *RuntimeClient) {
 	newCli, _ := RuntimeKubeClient(ctx, scheme)
 	cli = &RuntimeClient{
