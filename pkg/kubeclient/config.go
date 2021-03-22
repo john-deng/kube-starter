@@ -70,7 +70,7 @@ func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, cfg *RestCon
 		scheme = runtime.NewScheme()
 	}
 
-	ctx.Header(Subject, cfg.Impersonate.UserName)
+	ctx.Request().Header.Add(Subject, cfg.Impersonate.UserName)
 	k8sClient, err = client.New(cfg.Config, client.Options{Scheme: scheme})
 	if err != nil {
 		log.Error(err)
