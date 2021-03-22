@@ -15,6 +15,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	Subject = "subject"
+)
+
 // DefaultKubeconfig
 func DefaultKubeconfig() string {
 	fname := os.Getenv("KUBECONFIG")
@@ -65,6 +69,8 @@ func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, cfg *RestCon
 		// unauthorized user
 		scheme = runtime.NewScheme()
 	}
+
+	ctx.SetCookieKV(Subject, cfg.Impersonate.UserName)
 	k8sClient, err = client.New(cfg.Config, client.Options{Scheme: scheme})
 	if err != nil {
 		log.Error(err)
