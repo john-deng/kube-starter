@@ -54,9 +54,6 @@ type RuntimeClient struct {
 
 // RuntimeClient
 func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme, cfg *RestConfig) (cli *RuntimeClient) {
-	newCli, _ := RuntimeKubeClient(ctx, scheme, cfg)
-	cli = &RuntimeClient{
-		Client: newCli,
-	}
+	cli, _ = RuntimeKubeClient(ctx, scheme, cfg)
 	return
 }
