@@ -42,23 +42,19 @@ func Kubeconfig() (cfg *rest.Config, err error) {
 }
 
 // KubeClient
-func KubeClient(scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
-	var cfg *rest.Config
-	cfg, err = Kubeconfig()
-	if err == nil {
-		k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
+func KubeClient(scheme *runtime.Scheme, cfg *RestConfig) (k8sClient client.Client, err error)  {
+	if cfg.Config == nil {
+		return
 	}
+	k8sClient, err = client.New(cfg.Config, client.Options{Scheme: scheme})
 	return
 }
 
 // RuntimeKubeClient
-func RuntimeKubeClient(ctx context.Context,scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
-	var cfg *rest.Config
-	cfg, err = Kubeconfig()
-	if err != nil {
+func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, cfg *RestConfig) (k8sClient client.Client, err error)  {
+	if cfg.Config == nil {
 		return
 	}
-
 	bearerToken := ctx.GetHeader("Authorization")
 	token := strings.Replace(bearerToken, "Bearer ", "", -1)
 	var claims *jwt.Claims
@@ -69,7 +65,7 @@ func RuntimeKubeClient(ctx context.Context,scheme *runtime.Scheme) (k8sClient cl
 		// unauthorized user
 		scheme = runtime.NewScheme()
 	}
-	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
+	k8sClient, err = client.New(cfg.Config, client.Options{Scheme: scheme})
 	if err != nil {
 		log.Error(err)
 	}

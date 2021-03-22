@@ -5,6 +5,7 @@ import (
 	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/at"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -21,10 +22,22 @@ func init() {
 	app.Register(newConfiguration)
 }
 
+// RestConfig
+type RestConfig struct {
+	*rest.Config
+}
+
+// RestConfig
+func (c *configuration) RestConfig(scheme *runtime.Scheme) (cfg *RestConfig) {
+	cfg = new(RestConfig)
+	cfg.Config, _ = Kubeconfig()
+	return
+}
+
 // Client
 type Client client.Client
-func (c *configuration) Client(scheme *runtime.Scheme) (cli Client) {
-	cli, _ = KubeClient(scheme)
+func (c *configuration) Client(scheme *runtime.Scheme, cfg *RestConfig) (cli Client) {
+	cli, _ = KubeClient(scheme, cfg)
 	return
 }
 
@@ -36,8 +49,8 @@ type RuntimeClient struct {
 }
 
 // RuntimeClient
-func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme) (cli *RuntimeClient) {
-	newCli, _ := RuntimeKubeClient(ctx, scheme)
+func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme, cfg *RestConfig) (cli *RuntimeClient) {
+	newCli, _ := RuntimeKubeClient(ctx, scheme, cfg)
 	cli = &RuntimeClient{
 		Client: newCli,
 	}
