@@ -10,6 +10,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	Profile = "kubeclient"
+)
+
 type configuration struct {
 	at.AutoConfiguration
 }

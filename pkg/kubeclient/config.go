@@ -70,7 +70,7 @@ func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, cfg *RestCon
 	} else {
 		// unauthorized user
 		ctx.StatusCode(http.StatusUnauthorized)
-		scheme = runtime.NewScheme()
+		return
 	}
 	runtimeClient.Claims = claims
 	runtimeClient.Context = ctx
