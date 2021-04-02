@@ -19,8 +19,11 @@ func DecodeWithoutVerify(s string) (c *Claims, err error) {
 		return nil, fmt.Errorf("could not decode the payload: %w", err)
 	}
 	var claims struct {
-		Issuer string `json:"iss,omitempty"`
+		Issuer    string `json:"iss,omitempty"`
 		Subject   string `json:"sub,omitempty"`
+		Name      string `json:"name,omitempty"`
+		Username  string `json:"preferred_username,omitempty"`
+		Email     string `json:"email,omitempty"`
 		ExpiresAt int64  `json:"exp,omitempty"`
 	}
 	if err := json.NewDecoder(bytes.NewReader(payload)).Decode(&claims); err != nil {
@@ -32,10 +35,13 @@ func DecodeWithoutVerify(s string) (c *Claims, err error) {
 		return nil, fmt.Errorf("could not indent the json of token: %w", err)
 	}
 	return &Claims{
-		Issuer: claims.Issuer,
-		Subject: claims.Subject,
-		Expiry:  time.Unix(claims.ExpiresAt, 0),
-		Pretty:  prettyJson.String(),
+		Issuer:   claims.Issuer,
+		Subject:  claims.Subject,
+		Name:     claims.Name,
+		Username: claims.Username,
+		Email:    claims.Email,
+		Expiry:   time.Unix(claims.ExpiresAt, 0),
+		Pretty:   prettyJson.String(),
 	}, nil
 }
 

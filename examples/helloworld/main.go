@@ -40,6 +40,8 @@ type Controller struct {
 	// at.RestController or at.RestController must be embedded here
 	at.RestController
 	at.RequestMapping `value:"/api/v1/namespaces/{namespace}"`
+
+	client kubeclient.Client
 }
 
 type PodListResponse struct {
