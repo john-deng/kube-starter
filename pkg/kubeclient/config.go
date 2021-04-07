@@ -60,6 +60,9 @@ func RuntimeKubeClient(ctx context.Context,scheme *runtime.Scheme) (k8sClient cl
 	}
 
 	bearerToken := ctx.GetHeader("Authorization")
+	if bearerToken == "" {
+		bearerToken = ctx.URLParam("token")
+	}
 	token := strings.Replace(bearerToken, "Bearer ", "", -1)
 	var claims *jwt.Claims
 	claims, err = jwt.DecodeWithoutVerify(token)
