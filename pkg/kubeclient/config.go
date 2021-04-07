@@ -1,6 +1,7 @@
 package kubeclient
 
 import (
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +14,10 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const (
+	Subject = "subject"
 )
 
 // DefaultKubeconfig
@@ -42,23 +47,20 @@ func Kubeconfig() (cfg *rest.Config, err error) {
 }
 
 // KubeClient
-func KubeClient(scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
-	var cfg *rest.Config
-	cfg, err = Kubeconfig()
-	if err == nil {
-		k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
+func KubeClient(scheme *runtime.Scheme, cfg *RestConfig) (k8sClient client.Client, err error)  {
+	if cfg.Config == nil {
+		return
 	}
+	k8sClient, err = client.New(cfg.Config, client.Options{Scheme: scheme})
 	return
 }
 
 // RuntimeKubeClient
-func RuntimeKubeClient(ctx context.Context,scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
-	var cfg *rest.Config
-	cfg, err = Kubeconfig()
-	if err != nil {
+func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, cfg *RestConfig) (runtimeClient *RuntimeClient, err error)  {
+	if cfg.Config == nil {
 		return
 	}
-
+	runtimeClient = new(RuntimeClient)
 	bearerToken := ctx.GetHeader("Authorization")
 	if bearerToken == "" {
 		bearerToken = ctx.URLParam("token")
@@ -70,9 +72,12 @@ func RuntimeKubeClient(ctx context.Context,scheme *runtime.Scheme) (k8sClient cl
 		cfg.Impersonate.UserName = claims.Issuer + "#" + claims.Subject
 	} else {
 		// unauthorized user
-		scheme = runtime.NewScheme()
+		ctx.StatusCode(http.StatusUnauthorized)
+		return
 	}
-	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
+	runtimeClient.Claims = claims
+	runtimeClient.Context = ctx
+	runtimeClient.Client, err = client.New(cfg.Config, client.Options{Scheme: scheme})
 	if err != nil {
 		log.Error(err)
 	}
