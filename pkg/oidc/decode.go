@@ -1,6 +1,6 @@
 // Package jwt provides JWT manipulations.
 // See https://tools.ietf.org/html/rfc7519#section-4.1.3
-package jwt
+package oidc
 
 import (
 	"bytes"

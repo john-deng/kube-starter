@@ -4,9 +4,8 @@ import (
 	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/at"
-	"github.com/hidevopsio/kube-starter/pkg/jwt"
+	"github.com/hidevopsio/kube-starter/pkg/oidc"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -26,38 +25,66 @@ func init() {
 	app.Register(newConfiguration)
 }
 
-// RestConfig
-type RestConfig struct {
-	*rest.Config
+// ImpersonateClient
+type Client struct {
+	//at.ContextAware
+
+	client.Client
+
+	//Context context.Context `json:"context"`
 }
 
-// RestConfig
-func (c *configuration) RestConfig(scheme *runtime.Scheme) (cfg *RestConfig) {
-	cfg = new(RestConfig)
-	cfg.Config, _ = Kubeconfig()
+func (c *configuration) Client(scheme *runtime.Scheme) (cli *Client) {
+
+	newCli, _ := KubeClient(scheme)
+
+	cli = &Client{
+		Client: newCli,
+	}
+
 	return
 }
 
-// Client
-type Client client.Client
-
-func (c *configuration) Client(scheme *runtime.Scheme, cfg *RestConfig) (cli Client) {
-	cli, _ = KubeClient(scheme, cfg)
-	return
-}
-
-// RuntimeClient
-type RuntimeClient struct {
+// ImpersonateClient
+type ImpersonateClient struct {
 	at.ContextAware
 
 	client.Client
 
 	Context context.Context `json:"context"`
-	Claims  *jwt.Claims     `json:"claims"`
 }
 
-// RuntimeClient
-func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme, cfg *RestConfig) (cli *RuntimeClient) {
-	cli, _ = RuntimeKubeClient(ctx, scheme, cfg)
+// ImpersonateClient
+func (c *configuration) ImpersonateClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *ImpersonateClient) {
+	cli = new(ImpersonateClient)
+
+	newCli, _ := RuntimeKubeClient(ctx, scheme, token, false)
+
+	cli = &ImpersonateClient{
+		Context: ctx,
+		Client: newCli,
+	}
+	return
+}
+
+// TokenizeClient
+type TokenizeClient struct {
+	at.ContextAware
+
+	client.Client
+
+	Context context.Context `json:"context"`
+}
+
+// TokenizeClient
+func (c *configuration) TokenizeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *TokenizeClient) {
+	cli = new(TokenizeClient)
+
+	newCli, _ := RuntimeKubeClient(ctx, scheme, token, true)
+
+	cli = &TokenizeClient{
+		Context: ctx,
+		Client: newCli,
+	}
 	return
 }

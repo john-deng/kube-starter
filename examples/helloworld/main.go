@@ -19,6 +19,7 @@ package main
 // import web starter from hiboot
 import (
 	"context"
+	"github.com/hidevopsio/kube-starter/pkg/oidc"
 
 	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/app/web"
@@ -27,6 +28,7 @@ import (
 	"github.com/hidevopsio/hiboot/pkg/starter/actuator"
 	"github.com/hidevopsio/hiboot/pkg/starter/swagger"
 	"github.com/hidevopsio/kube-starter/pkg/kubeclient"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -41,7 +43,7 @@ type Controller struct {
 	at.RestController
 	at.RequestMapping `value:"/api/v1/namespaces/{namespace}"`
 
-	client kubeclient.Client
+	client *kubeclient.Client
 }
 
 type PodListResponse struct {
@@ -64,7 +66,7 @@ func (c *Controller) ListPods(_ struct {
 			PodListResponse
 		}
 	}
-}, namespace string, cli *kubeclient.RuntimeClient) (response *PodListResponse, err error) {
+}, namespace string, cli *kubeclient.ImpersonateClient) (response *PodListResponse, err error) {
 	response = new(PodListResponse)
 	var podList corev1.PodList
 	if cli.Client != nil {
@@ -78,6 +80,45 @@ func (c *Controller) ListPods(_ struct {
 	return
 }
 
+type DeploymentListResponse struct {
+	model.BaseResponseInfo
+	Data *appsv1.DeploymentList `json:"data"`
+}
+
+// Get GET /
+func (c *Controller) ListDeployment(_ struct {
+	at.GetMapping `value:"/deployments"`
+	at.Operation  `id:"List Deployments" description:"List Deployments of giving namespace"`
+	at.Consumes   `values:"application/json"`
+	at.Produces   `values:"application/json"`
+	Parameters struct {
+		at.Parameter `type:"string" name:"namespace" in:"path" description:"Path Variable（Namespace）" required:"true"`
+	}
+	Responses struct {
+		StatusOK struct {
+			at.Parameter `name:"Namespace" in:"body" description:"Get Deployment List"`
+			PodListResponse
+		}
+	}
+}, namespace string, token *oidc.Token) (response *DeploymentListResponse, err error) {
+	response = new(DeploymentListResponse)
+	var deploymentList appsv1.DeploymentList
+	if c.client != nil {
+		err = c.client.List(context.TODO(), &deploymentList, client.InNamespace(namespace))
+		if err == nil {
+			response.Message = token.Claims.Subject + " Got Deployment List"
+			response.Data = &deploymentList
+		}
+	}
+
+	// response
+	return
+}
+
+func newController(client *kubeclient.Client) *Controller  {
+	return &Controller{client: client}
+}
+
 // main function
 func main() {
 	scheme  := runtime.NewScheme()
@@ -85,12 +126,14 @@ func main() {
 
 	app.Register(
 		scheme,
+		newController,
 		swagger.ApiInfoBuilder().
 		Title("HiBoot Example - Hello world").
 		Description("This is an example that demonstrate the basic usage"))
 
 	// create new web application and run it
-	web.NewApplication(new(Controller)).
+	web.NewApplication().
 		SetProperty(app.ProfilesInclude, swagger.Profile, web.Profile, actuator.Profile).
+		SetProperty("logging.level", "debug").
 		Run()
 }

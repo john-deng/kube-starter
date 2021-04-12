@@ -1,4 +1,4 @@
-package jwt_test
+package oidc_test
 
 import (
 	"testing"
@@ -14,7 +14,7 @@ func (tp timeProvider) Now() time.Time {
 }
 
 func TestClaims_IsExpired(t *testing.T) {
-	claims := jwt.Claims{
+	claims := oidc.Claims{
 		Expiry: time.Date(2019, 1, 2, 3, 4, 5, 0, time.UTC),
 	}
 

@@ -1,18 +1,16 @@
 package kubeclient
 
 import (
+	"github.com/hidevopsio/kube-starter/pkg/oidc"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/log"
-	"github.com/hidevopsio/kube-starter/pkg/jwt"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -28,7 +26,7 @@ func DefaultKubeconfig() string {
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
-		klog.Warningf("failed to get home directory: %v", err)
+		log.Warnf("failed to get home directory: %v", err)
 		return ""
 	}
 	return filepath.Join(home, ".kube", "config")
@@ -40,46 +38,51 @@ func Kubeconfig() (cfg *rest.Config, err error) {
 	if err != nil {
 		cfg, err = clientcmd.BuildConfigFromFlags("", DefaultKubeconfig())
 		if err != nil {
-			klog.Warningf("Error building kubeconfig: %s", err.Error())
+			log.Warnf("Error building kubeconfig: %s", err.Error())
 		}
 	}
 	return
 }
 
 // KubeClient
-func KubeClient(scheme *runtime.Scheme, cfg *RestConfig) (k8sClient client.Client, err error)  {
-	if cfg.Config == nil {
+func KubeClient(scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
+	var cfg *rest.Config
+	cfg, err = Kubeconfig()
+	if err != nil {
+		log.Warn(err)
 		return
 	}
-	k8sClient, err = client.New(cfg.Config, client.Options{Scheme: scheme})
+	//cfg.Impersonate.UserName = ""
+	//cfg.BearerToken = ""
+	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
 	return
 }
 
 // RuntimeKubeClient
-func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, cfg *RestConfig) (runtimeClient *RuntimeClient, err error)  {
-	if cfg.Config == nil {
+func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token, useToken bool) (cli client.Client, err error)  {
+	var cfg *rest.Config
+	cfg, err = Kubeconfig()
+	if err != nil {
+		log.Warn(err)
 		return
 	}
-	runtimeClient = new(RuntimeClient)
-	bearerToken := ctx.GetHeader("Authorization")
-	if bearerToken == "" {
-		bearerToken = ctx.URLParam("token")
-	}
-	token := strings.Replace(bearerToken, "Bearer ", "", -1)
-	var claims *jwt.Claims
-	claims, err = jwt.DecodeWithoutVerify(token)
-	if err == nil {
-		cfg.Impersonate.UserName = claims.Issuer + "#" + claims.Subject
+
+	if token != nil && token.Data != "" {
+		if useToken {
+			cfg.BearerToken = token.Data
+		} else {
+			cfg.Impersonate.UserName = token.Claims.Issuer + "#" + token.Claims.Subject
+		}
 	} else {
 		// unauthorized user
 		ctx.StatusCode(http.StatusUnauthorized)
+		log.Warn("Unauthorized")
 		return
 	}
-	runtimeClient.Claims = claims
-	runtimeClient.Context = ctx
-	runtimeClient.Client, err = client.New(cfg.Config, client.Options{Scheme: scheme})
+
+	cli, err = client.New(cfg, client.Options{Scheme: scheme})
 	if err != nil {
-		log.Error(err)
+		log.Warn(err)
 	}
 	return
 }
