@@ -80,6 +80,42 @@ func (c *Controller) ListPods(_ struct {
 	return
 }
 
+
+type ServiceListResponse struct {
+	model.BaseResponseInfo
+	Data *corev1.ServiceList `json:"data"`
+}
+
+// Get GET /
+func (c *Controller) ListServices(_ struct {
+	at.GetMapping `value:"/services"`
+	at.Operation  `id:"List Services" description:"List Services of giving namespace"`
+	at.Consumes   `values:"application/json"`
+	at.Produces   `values:"application/json"`
+	Parameters struct {
+		at.Parameter `type:"string" name:"namespace" in:"path" description:"Path Variable（Namespace）" required:"true"`
+	}
+	Responses struct {
+		StatusOK struct {
+			at.Parameter `name:"Namespace" in:"body" description:"Get Service List"`
+			ServiceListResponse
+		}
+	}
+}, namespace string, cli *kubeclient.TokenizeClient) (response *ServiceListResponse, err error) {
+	response = new(ServiceListResponse)
+	var serviceList corev1.ServiceList
+	if cli.Client != nil {
+		err = cli.List(context.TODO(), &serviceList, client.InNamespace(namespace))
+		if err == nil {
+			response.Data = &serviceList
+		}
+	}
+
+	// response
+	return
+}
+
+
 type DeploymentListResponse struct {
 	model.BaseResponseInfo
 	Data *appsv1.DeploymentList `json:"data"`
