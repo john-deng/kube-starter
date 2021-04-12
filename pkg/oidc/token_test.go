@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hidevopsio/kube-starter/pkg/jwt"
+	"github.com/hidevopsio/kube-starter/pkg/oidc"
 )
 
 type timeProvider time.Time
