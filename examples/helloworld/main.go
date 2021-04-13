@@ -66,7 +66,7 @@ func (c *Controller) ListPods(_ struct {
 			PodListResponse
 		}
 	}
-}, namespace string, cli *kubeclient.ImpersonateClient) (response *PodListResponse, err error) {
+}, namespace string, cli *kubeclient.RuntimeClient) (response *PodListResponse, err error) {
 	response = new(PodListResponse)
 	var podList corev1.PodList
 	if cli.Client != nil {
@@ -142,7 +142,11 @@ func (c *Controller) ListDeployment(_ struct {
 	if c.client != nil {
 		err = c.client.List(context.TODO(), &deploymentList, client.InNamespace(namespace))
 		if err == nil {
-			response.Message = token.Claims.Subject + " Got Deployment List"
+			user := "unknown"
+			if token.Claims != nil {
+				user = token.Claims.Subject
+			}
+			response.Message = user + " Got Deployment List"
 			response.Data = &deploymentList
 		}
 	}
