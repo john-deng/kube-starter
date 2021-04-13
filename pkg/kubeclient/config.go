@@ -67,7 +67,7 @@ func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.
 		return
 	}
 
-	if token != nil && token.Data != "" {
+	if token != nil && token.Claims != nil && token.Data != "" {
 		if useToken {
 			cfg.BearerToken = token.Data
 		} else {
