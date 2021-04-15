@@ -88,3 +88,25 @@ func (c *configuration) TokenizeClient(ctx context.Context, scheme *runtime.Sche
 	}
 	return
 }
+
+// RuntimeClient
+type RuntimeClient struct {
+	at.ContextAware
+
+	client.Client
+
+	Context context.Context `json:"context"`
+}
+
+// TokenizeClient
+func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *RuntimeClient) {
+	cli = new(RuntimeClient)
+
+	newCli, _ := RuntimeKubeClient(ctx, scheme, token, true)
+
+	cli = &RuntimeClient{
+		Context: ctx,
+		Client: newCli,
+	}
+	return
+}
