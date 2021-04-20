@@ -68,8 +68,10 @@ func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.
 	}
 
 	if token != nil && token.Claims != nil && token.Data != "" {
-		if useToken {
+		kubeServiceHost := os.Getenv("KUBERNETES_SERVICE_HOST")
+		if kubeServiceHost == "" && useToken {
 			cfg.BearerToken = token.Data
+			cfg.BearerTokenFile = ""
 		} else {
 			cfg.Impersonate.UserName = token.Claims.Issuer + "#" + token.Claims.Subject
 		}
