@@ -1,10 +1,10 @@
 package kubeclient
 
 import (
-	"github.com/hidevopsio/kube-starter/pkg/oidc"
-	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/hidevopsio/kube-starter/pkg/oidc"
 
 	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/log"
@@ -77,7 +77,7 @@ func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.
 		}
 	} else {
 		// unauthorized user
-		ctx.StatusCode(http.StatusUnauthorized)
+		//ctx.StatusCode(http.StatusUnauthorized) no need to use it as middleware will handle it
 		log.Warn("Unauthorized")
 		return
 	}
