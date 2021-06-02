@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/google/go-cmp v0.5.2
-	github.com/hidevopsio/hiboot v1.5.1-0.20210602050211-5ca992341f58
+	github.com/hidevopsio/hiboot v1.5.1-0.20210602070434-0ed5fb8718df
 	k8s.io/api v0.20.2
 	k8s.io/apimachinery v0.20.4
 	k8s.io/client-go v0.20.2
