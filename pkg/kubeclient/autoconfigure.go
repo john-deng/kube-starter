@@ -25,7 +25,7 @@ func init() {
 	app.Register(newConfiguration)
 }
 
-// ImpersonateClient
+// Client
 type Client struct {
 	//at.ContextAware
 
@@ -98,11 +98,14 @@ type RuntimeClient struct {
 	Context context.Context `json:"context"`
 }
 
-// TokenizeClient
-func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *RuntimeClient) {
+// RuntimeClient
+func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *RuntimeClient, err error) {
 	cli = new(RuntimeClient)
 
-	newCli, _ := RuntimeKubeClient(ctx, scheme, token, true)
+	newCli, err := RuntimeKubeClient(ctx, scheme, token, true)
+	if err != nil {
+		return
+	}
 
 	cli = &RuntimeClient{
 		Context: ctx,

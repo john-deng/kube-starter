@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/log"
@@ -79,6 +80,7 @@ func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.
 		// unauthorized user
 		//ctx.StatusCode(http.StatusUnauthorized) no need to use it as middleware will handle it
 		log.Warn("Unauthorized")
+		err = errors.NewUnauthorized("Unauthorized")
 		return
 	}
 
