@@ -25,7 +25,7 @@ func init() {
 	app.Register(newConfiguration)
 }
 
-// Client
+// Client is the encapsulation of the default kube client
 type Client struct {
 	//at.ContextAware
 
@@ -45,7 +45,7 @@ func (c *configuration) Client(scheme *runtime.Scheme) (cli *Client) {
 	return
 }
 
-// ImpersonateClient
+// ImpersonateClient is the client the impersonate kube client
 type ImpersonateClient struct {
 	at.ContextAware
 
@@ -54,7 +54,6 @@ type ImpersonateClient struct {
 	Context context.Context `json:"context"`
 }
 
-// ImpersonateClient
 func (c *configuration) ImpersonateClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *ImpersonateClient) {
 	cli = new(ImpersonateClient)
 
@@ -67,7 +66,7 @@ func (c *configuration) ImpersonateClient(ctx context.Context, scheme *runtime.S
 	return
 }
 
-// TokenizeClient
+// TokenizeClient is the client the tokenize kube client
 type TokenizeClient struct {
 	at.ContextAware
 
@@ -76,7 +75,6 @@ type TokenizeClient struct {
 	Context context.Context `json:"context"`
 }
 
-// TokenizeClient
 func (c *configuration) TokenizeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *TokenizeClient) {
 	cli = new(TokenizeClient)
 
@@ -89,7 +87,7 @@ func (c *configuration) TokenizeClient(ctx context.Context, scheme *runtime.Sche
 	return
 }
 
-// RuntimeClient
+// RuntimeClient is the client the runtime kube client
 type RuntimeClient struct {
 	at.ContextAware
 
@@ -98,7 +96,6 @@ type RuntimeClient struct {
 	Context context.Context `json:"context"`
 }
 
-// RuntimeClient
 func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *RuntimeClient, err error) {
 	cli = new(RuntimeClient)
 

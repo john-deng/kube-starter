@@ -1,0 +1,18 @@
+domain: icloudnative.net
+layout:
+- go.kubebuilder.io/v3
+multigroup: true
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
+projectName: demo-operator
+repo: github.com/icloudnative-net/demo-operator
+resources:
+- api:
+    crdVersion: v1
+  domain: icloudnative.net
+  group: admin
+  kind: User
+  path: github.com/icloudnative-net/demo-operator/apis/admin/v1alpha1
+  version: v1alpha1
+version: "3"
