@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 const (
@@ -30,12 +31,7 @@ func init() {
 }
 
 // Manager is the controller runtime manager
-type Manager struct {
-	//at.ContextAware
-	ctrl.Manager
-}
-
-func (c *configuration) Manager(scheme *runtime.Scheme) (mgr *Manager, err error) {
+func (c *configuration) Manager(scheme *runtime.Scheme) (mgr manager.Manager, err error) {
 	opts := zap.Options{
 		Development: true,
 	}
@@ -44,8 +40,7 @@ func (c *configuration) Manager(scheme *runtime.Scheme) (mgr *Manager, err error
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
-	var m ctrl.Manager
-	m, err = ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgr, err = ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     c.Properties.MetricsBindAddress,
 		Port:                   c.Properties.Port,
@@ -56,11 +51,6 @@ func (c *configuration) Manager(scheme *runtime.Scheme) (mgr *Manager, err error
 
 	if err != nil {
 		log.Error(err)
-		return
-	}
-
-	mgr = &Manager{
-		Manager: m,
 	}
 	return
 }

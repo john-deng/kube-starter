@@ -25,12 +25,14 @@ import (
 	"github.com/hidevopsio/hiboot/pkg/app/web"
 	"github.com/hidevopsio/hiboot/pkg/starter/actuator"
 	"github.com/hidevopsio/hiboot/pkg/starter/logging"
+	"github.com/hidevopsio/kube-starter/pkg/operator"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	adminv1alpha1 "github.com/icloudnative-net/demo-operator/apis/admin/v1alpha1"
+	adminv1alpha1 "github.com/hidevopsio/kube-starter/examples/demo-operator/apis/admin/v1alpha1"
+	_ "github.com/hidevopsio/kube-starter/examples/demo-operator/controllers/admin"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -51,9 +53,11 @@ func init() {
 
 func main() {
 	web.NewApplication().
+		SetProperty(logging.Level, logging.LevelDebug).
 		SetProperty(app.ProfilesInclude,
 			actuator.Profile,
 			logging.Profile,
+			operator.Profile,
 		).
 		Run()
 }

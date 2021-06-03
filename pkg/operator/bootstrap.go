@@ -7,15 +7,16 @@ import (
 	"github.com/hidevopsio/hiboot/pkg/at"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 type bootstrap struct {
 	at.EnableScheduling
 
-	manager *Manager
+	manager manager.Manager
 }
 
-func newBootstrap(manager *Manager) *bootstrap {
+func newBootstrap(manager manager.Manager) *bootstrap {
 	return &bootstrap{
 		manager: manager,
 	}
@@ -37,7 +38,7 @@ func (b *bootstrap) Run(_ struct{at.Scheduled `limit:"1"`})  {
 	}
 
 	setupLog.Info("starting operator manager")
-	if err := b.manager.Manager.Start(ctrl.SetupSignalHandler()); err != nil {
+	if err := b.manager.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}

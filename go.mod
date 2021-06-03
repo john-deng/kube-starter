@@ -3,6 +3,7 @@ module github.com/hidevopsio/kube-starter
 go 1.15
 
 require (
+	github.com/go-logr/logr v0.4.0
 	github.com/google/go-cmp v0.5.2
 	github.com/hidevopsio/hiboot v1.5.1-0.20210602070434-0ed5fb8718df
 	k8s.io/api v0.20.2
