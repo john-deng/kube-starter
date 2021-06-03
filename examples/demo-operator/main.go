@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+//Here is a few steps to generate an operator
+//operator-sdk init --domain icloudnative.net --repo github.com/hidevopsio/kube-starter/examples/demo-operator
 //go:generate operator-sdk create api --group admin --version v1alpha1 --kind User --resource --namespaced=false --controller=false
 //go:generate make generate manifests
 //go:generate kubectl apply -f config/crd/bases
