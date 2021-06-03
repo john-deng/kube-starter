@@ -2,9 +2,11 @@ package admin
 
 import (
 	"context"
+	"os"
 
 	"github.com/go-logr/logr"
-	//"github.com/hidevopsio/kube-starter/pkg/operator"
+	"github.com/hidevopsio/hiboot/pkg/app"
+	"github.com/hidevopsio/kube-starter/pkg/operator"
 	adminv1alpha1 "github.com/icloudnative-net/demo-operator/apis/admin/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -17,15 +19,25 @@ type UserReconciler struct {
 	Log    logr.Logger
 	Scheme *runtime.Scheme
 }
-//
-//Client: mgr.GetClient(),
-//Log:    ctrl.Log.WithName("controllers").WithName("apps").WithName("Project"),
-////Scheme: mgr.GetScheme(),
-//
-//func newUserReconciler(manager *operator.Manager)  {
-//
-//}
 
+func newUserReconciler(manager *operator.Manager) *UserReconciler {
+	reconciler := &UserReconciler{
+		Client: manager.GetClient(),
+		Log: ctrl.Log.WithName("controllers").WithName("admin").WithName("User"),
+		Scheme: manager.GetScheme(manager.Manager),
+	}
+	err := reconciler.SetupWithManager(manager)
+	if err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Project")
+		os.Exit(1)
+	}
+
+	return reconciler
+}
+
+func init() {
+	app.Register(newUserReconciler)
+}
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
