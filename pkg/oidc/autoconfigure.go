@@ -5,6 +5,8 @@ import (
 	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/at"
 	"github.com/hidevopsio/hiboot/pkg/log"
+	"k8s.io/apimachinery/pkg/api/errors"
+
 	"strings"
 )
 
@@ -34,15 +36,18 @@ type Token struct {
 }
 
 // Token
-func (c *configuration) Token(ctx context.Context) (token *Token) {
+func (c *configuration) Token(ctx context.Context) (token *Token, err error) {
 	token = new(Token)
-
+	if ctx == nil {
+		err = errors.NewBadRequest("unknown context")
+		log.Error(err)
+		return
+	}
 	bearerToken := ctx.GetHeader("Authorization")
 	if bearerToken == "" {
 		bearerToken = ctx.URLParam("token")
 	}
 	token.Data = strings.Replace(bearerToken, "Bearer ", "", -1)
-	var err error
 	token.Claims, err = DecodeWithoutVerify(token.Data)
 	if err != nil {
 		log.Error(err)
