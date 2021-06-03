@@ -11,6 +11,8 @@ type Properties struct {
 	at.ConfigurationProperties `value:"operator"`
 	at.AutoWired
 
+	Development bool `json:"development"`
+
 	// SyncPeriod determines the minimum frequency at which watched resources are
 	// reconciled. A lower period will correct entropy more quickly, but reduce
 	// responsiveness to change if there are many watched resources. Change this

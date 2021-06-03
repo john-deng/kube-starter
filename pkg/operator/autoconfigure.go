@@ -1,8 +1,6 @@
 package operator
 
 import (
-	"flag"
-
 	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/at"
 	"github.com/hidevopsio/hiboot/pkg/log"
@@ -33,11 +31,8 @@ func init() {
 // Manager is the controller runtime manager
 func (c *configuration) Manager(scheme *runtime.Scheme) (mgr manager.Manager, err error) {
 	opts := zap.Options{
-		Development: true,
+		Development: c.Properties.Development,
 	}
-	opts.BindFlags(flag.CommandLine)
-	flag.Parse()
-
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	mgr, err = ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
