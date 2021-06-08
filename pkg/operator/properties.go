@@ -19,11 +19,11 @@ type Properties struct {
 	// value only if you know what you are doing. Defaults to 10 hours if unset.
 	// there will a 10 percent jitter between the SyncPeriod of all controllers
 	// so that all controllers will not send list requests simultaneously.
-	SyncPeriod *time.Duration
+	SyncPeriod *time.Duration `json:"syncPeriod"`
 
 	// LeaderElection determines whether or not to use leader election when
 	// starting the manager.
-	LeaderElection bool
+	LeaderElection bool `json:"leaderElection"`
 
 	// LeaderElectionResourceLock determines which resource lock to use for leader election,
 	// defaults to "configmapsleases". Change this value only if you know what you are doing.
@@ -38,15 +38,15 @@ type Properties struct {
 	//
 	// Note: before controller-runtime version v0.7, the resource lock was set to "configmaps".
 	// Please keep this in mind, when planning a proper migration path for your controller.
-	LeaderElectionResourceLock string
+	LeaderElectionResourceLock string `json:"leaderElectionResourceLock"`
 
 	// LeaderElectionNamespace determines the namespace in which the leader
 	// election resource will be created.
-	LeaderElectionNamespace string
+	LeaderElectionNamespace string `json:"leaderElectionNamespace"`
 
 	// LeaderElectionID determines the name of the resource that leader election
 	// will use for holding the leader lock.
-	LeaderElectionID string
+	LeaderElectionID string `json:"leaderElectionId"`
 
 	// LeaderElectionConfig can be specified to override the default configuration
 	// that is used to build the leader election client.
@@ -57,18 +57,18 @@ type Properties struct {
 	// Manager is stopped, otherwise this setting is unsafe. Setting this significantly
 	// speeds up voluntary leader transitions as the new leader doesn't have to wait
 	// LeaseDuration time first.
-	LeaderElectionReleaseOnCancel bool
+	LeaderElectionReleaseOnCancel bool `json:"leaderElectionReleaseOnCancel"`
 
 	// LeaseDuration is the duration that non-leader candidates will
 	// wait to force acquire leadership. This is measured against time of
 	// last observed ack. Default is 15 seconds.
-	LeaseDuration *time.Duration
+	LeaseDuration *time.Duration `json:"leaseDuration"`
 	// RenewDeadline is the duration that the acting controlplane will retry
 	// refreshing leadership before giving up. Default is 10 seconds.
-	RenewDeadline *time.Duration
+	RenewDeadline *time.Duration `json:"renewDeadline"`
 	// RetryPeriod is the duration the LeaderElector clients should wait
 	// between tries of actions. Default is 2 seconds.
-	RetryPeriod *time.Duration
+	RetryPeriod *time.Duration `json:"retryPeriod"`
 
 	// Namespace if specified restricts the manager's cache to watch objects in
 	// the desired namespace Defaults to all namespaces
@@ -76,7 +76,7 @@ type Properties struct {
 	// Note: If a namespace is specified, controllers can still Watch for a
 	// cluster-scoped resource (e.g Node).  For namespaced resources the cache
 	// will only hold objects from the desired namespace.
-	Namespace string
+	Namespace string `json:"namespace"`
 
 	// MetricsBindAddress is the TCP address that the controller should bind to
 	// for serving prometheus metrics.
@@ -88,26 +88,26 @@ type Properties struct {
 	HealthProbeBindAddress string `json:"healthProbeBindAddress" default:":8081"`
 
 	// Readiness probe endpoint name, defaults to "readyz"
-	ReadinessEndpointName string
+	ReadinessEndpointName string `json:"readinessEndpointName"`
 
 	// Liveness probe endpoint name, defaults to "healthz"
-	LivenessEndpointName string
+	LivenessEndpointName string `json:"livenessEndpointName"`
 
 	// Port is the port that the webhook server serves at.
 	// It is used to set webhook.Server.Port.
 	Port int `json:"port" default:"9443"`
 	// Host is the hostname that the webhook server binds to.
 	// It is used to set webhook.Server.Host.
-	Host string
+	Host string `json:"host"`
 
 	// CertDir is the directory that contains the server key and certificate.
 	// if not set, webhook server would look up the server key and certificate in
 	// {TempDir}/k8s-webhook-server/serving-certs. The server key and certificate
 	// must be named tls.key and tls.crt, respectively.
-	CertDir string
+	CertDir string `json:"certDir"`
 	// Functions to all for a user to customize the values that will be injected.
 
 	// DryRunClient specifies whether the client should be configured to enforce
 	// dryRun mode.
-	DryRunClient bool
+	DryRunClient bool `json:"dryRunClient"`
 }
