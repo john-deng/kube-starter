@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/go-logr/logr v0.4.0
 	github.com/google/go-cmp v0.5.2
-	github.com/hidevopsio/hiboot v1.5.1-0.20210606173124-9bd73ca8b1c2
+	github.com/hidevopsio/hiboot v1.6.0
 	k8s.io/api v0.20.2
 	k8s.io/apimachinery v0.20.4
 	k8s.io/client-go v0.20.2

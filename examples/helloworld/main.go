@@ -19,6 +19,7 @@ package main
 // import web starter from hiboot
 import (
 	"context"
+
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
 
 	"github.com/hidevopsio/hiboot/pkg/app"
@@ -101,7 +102,7 @@ func (c *Controller) ListServices(_ struct {
 			ServiceListResponse
 		}
 	}
-}, namespace string, cli *kubeclient.TokenizeClient) (response *ServiceListResponse, err error) {
+}, namespace string, cli *kubeclient.RuntimeClient) (response *ServiceListResponse, err error) {
 	response = new(ServiceListResponse)
 	var serviceList corev1.ServiceList
 	if cli.Client != nil {
