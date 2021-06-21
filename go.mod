@@ -11,4 +11,5 @@ require (
 	k8s.io/client-go v0.20.2
 	k8s.io/klog/v2 v2.6.0 // indirect
 	sigs.k8s.io/controller-runtime v0.8.2
+	github.com/jinzhu/copier v0.2.8
 )
