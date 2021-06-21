@@ -35,7 +35,7 @@ type Token struct {
 	Claims  *Claims         `json:"claims"`
 }
 
-// Token
+// Token instantiate bearer token to object
 func (c *configuration) Token(ctx context.Context) (token *Token, err error) {
 	token = new(Token)
 	if ctx == nil {

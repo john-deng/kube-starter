@@ -19,7 +19,7 @@ const (
 	Subject = "subject"
 )
 
-// DefaultKubeconfig
+// DefaultKubeconfig load default kube config
 func DefaultKubeconfig() string {
 	fname := os.Getenv("KUBECONFIG")
 	if fname != "" {
@@ -33,7 +33,7 @@ func DefaultKubeconfig() string {
 	return filepath.Join(home, ".kube", "config")
 }
 
-// Kubeconfig
+// Kubeconfig new kube config
 func Kubeconfig() (cfg *rest.Config, err error) {
 	cfg, err = rest.InClusterConfig()
 	if err != nil {
@@ -45,7 +45,7 @@ func Kubeconfig() (cfg *rest.Config, err error) {
 	return
 }
 
-// KubeClient
+// KubeClient new kube client
 func KubeClient(scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
 	var cfg *rest.Config
 	cfg, err = Kubeconfig()
@@ -59,7 +59,7 @@ func KubeClient(scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
 	return
 }
 
-// RuntimeKubeClient
+// RuntimeKubeClient new runtime kube client
 func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token, useToken bool) (cli client.Client, err error)  {
 	var cfg *rest.Config
 	cfg, err = Kubeconfig()
