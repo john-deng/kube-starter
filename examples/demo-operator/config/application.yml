@@ -1,2 +1,17 @@
+app:
+  name: demo-operator
+  project: icloudnative
+  version: v1
+  profiles:
+    include:
+      - web
+      - actuator
+      - logging
+      - operator
 operator:
-  port: 8081
+  healthProbeBindAddress: :8081
+  metricsBindAddress: :8082
+  leaderElection: true
+  leaderElectionID: ${app.name}-lock
+  leaderElectionNamespace: kube-system
+  leaseDuration: 10

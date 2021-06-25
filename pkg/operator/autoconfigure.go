@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"time"
+
 	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/at"
 	"github.com/hidevopsio/hiboot/pkg/log"
@@ -39,6 +41,24 @@ func (c *configuration) Manager(scheme *runtime.Scheme) (mgr manager.Manager, er
 	var options ctrl.Options
 	_ = copier.CopyWithOption(&options, &c.Properties, copier.Option{IgnoreEmpty: true, DeepCopy: true})
 	options.Scheme = scheme
+	if c.Properties.LeaseDuration != nil {
+		second := *c.Properties.LeaseDuration * time.Second
+		options.LeaseDuration = &second
+	}
+	if c.Properties.RenewDeadline != nil {
+		second := *c.Properties.RenewDeadline * time.Second
+		options.RenewDeadline = &second
+	}
+	if c.Properties.RetryPeriod != nil {
+		second := *c.Properties.RetryPeriod * time.Second
+		options.RetryPeriod = &second
+	}
+	if c.Properties.SyncPeriod != nil {
+		second := *c.Properties.SyncPeriod * time.Second
+		options.SyncPeriod = &second
+	}
+
+	options.LeaderElectionConfig, err = Kubeconfig()
 
 	mgr, err = ctrl.NewManager(ctrl.GetConfigOrDie(), options)
 
