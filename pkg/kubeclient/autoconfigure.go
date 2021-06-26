@@ -15,6 +15,8 @@ const (
 
 type configuration struct {
 	at.AutoConfiguration
+
+	InCluster *bool `value:"${kube.config.inCluster}"`
 }
 
 func newConfiguration() *configuration {
@@ -36,7 +38,7 @@ type Client struct {
 
 func (c *configuration) Client(scheme *runtime.Scheme) (cli *Client) {
 
-	newCli, _ := KubeClient(scheme)
+	newCli, _ := KubeClient(scheme, c.InCluster)
 
 	cli = &Client{
 		Client: newCli,
@@ -57,7 +59,7 @@ type ImpersonateClient struct {
 func (c *configuration) ImpersonateClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *ImpersonateClient) {
 	cli = new(ImpersonateClient)
 
-	newCli, _ := RuntimeKubeClient(ctx, scheme, token, false)
+	newCli, _ := RuntimeKubeClient(scheme, token, false, c.InCluster)
 
 	cli = &ImpersonateClient{
 		Context: ctx,
@@ -78,7 +80,7 @@ type TokenizeClient struct {
 func (c *configuration) TokenizeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *TokenizeClient) {
 	cli = new(TokenizeClient)
 
-	newCli, _ := RuntimeKubeClient(ctx, scheme, token, true)
+	newCli, _ := RuntimeKubeClient(scheme, token, true, c.InCluster)
 
 	cli = &TokenizeClient{
 		Context: ctx,
@@ -99,7 +101,7 @@ type RuntimeClient struct {
 func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *RuntimeClient, err error) {
 	cli = new(RuntimeClient)
 
-	newCli, err := RuntimeKubeClient(ctx, scheme, token, true)
+	newCli, err := RuntimeKubeClient(scheme, token, true, c.InCluster)
 	if err != nil {
 		return
 	}

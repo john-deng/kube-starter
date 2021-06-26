@@ -7,7 +7,6 @@ import (
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
 	"k8s.io/apimachinery/pkg/api/errors"
 
-	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/log"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -34,8 +33,11 @@ func DefaultKubeconfig() string {
 }
 
 // Kubeconfig new kube config
-func Kubeconfig() (cfg *rest.Config, err error) {
-	cfg, err = rest.InClusterConfig()
+func Kubeconfig(inCluster *bool) (cfg *rest.Config, err error) {
+	if inCluster == nil || *inCluster {
+		cfg, err = rest.InClusterConfig()
+	}
+
 	if err != nil {
 		cfg, err = clientcmd.BuildConfigFromFlags("", DefaultKubeconfig())
 		if err != nil {
@@ -46,23 +48,21 @@ func Kubeconfig() (cfg *rest.Config, err error) {
 }
 
 // KubeClient new kube client
-func KubeClient(scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
+func KubeClient(scheme *runtime.Scheme, inCluster *bool) (k8sClient client.Client, err error)  {
 	var cfg *rest.Config
-	cfg, err = Kubeconfig()
+	cfg, err = Kubeconfig(inCluster)
 	if err != nil {
 		log.Warn(err)
 		return
 	}
-	//cfg.Impersonate.UserName = ""
-	//cfg.BearerToken = ""
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
 	return
 }
 
 // RuntimeKubeClient new runtime kube client
-func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token, useToken bool) (cli client.Client, err error)  {
+func RuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bool, inCluster *bool) (cli client.Client, err error)  {
 	var cfg *rest.Config
-	cfg, err = Kubeconfig()
+	cfg, err = Kubeconfig(inCluster)
 	if err != nil {
 		log.Warn(err)
 		return
@@ -77,8 +77,6 @@ func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.
 			cfg.Impersonate.UserName = token.Claims.Issuer + "#" + token.Claims.Subject
 		}
 	} else {
-		// unauthorized user
-		//ctx.StatusCode(http.StatusUnauthorized) no need to use it as middleware will handle it
 		log.Warn("Unauthorized")
 		err = errors.NewUnauthorized("Unauthorized")
 		return
