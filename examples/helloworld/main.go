@@ -174,7 +174,7 @@ func main() {
 
 	// create new web application and run it
 	web.NewApplication().
-		SetProperty(app.ProfilesInclude, swagger.Profile, web.Profile, actuator.Profile).
+		SetProperty(app.ProfilesInclude, swagger.Profile, web.Profile, actuator.Profile, kubeclient.Profile).
 		SetProperty("logging.level", "debug").
 		Run()
 }

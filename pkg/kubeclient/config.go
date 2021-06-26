@@ -38,7 +38,7 @@ func Kubeconfig(inCluster *bool) (cfg *rest.Config, err error) {
 		cfg, err = rest.InClusterConfig()
 	}
 
-	if err != nil {
+	if err != nil || inCluster != nil && !*inCluster {
 		cfg, err = clientcmd.BuildConfigFromFlags("", DefaultKubeconfig())
 		if err != nil {
 			log.Warnf("Error building kubeconfig: %s", err.Error())
