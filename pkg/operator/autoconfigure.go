@@ -60,9 +60,7 @@ func (c *configuration) Manager(scheme *runtime.Scheme, cfg *rest.Config) (mgr m
 		options.SyncPeriod = &second
 	}
 
-	options.LeaderElectionConfig = cfg
-
-	mgr, err = ctrl.NewManager(ctrl.GetConfigOrDie(), options)
+	mgr, err = ctrl.NewManager(cfg, options)
 
 	if err != nil {
 		log.Error(err)
