@@ -6,8 +6,10 @@ import (
 	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/at"
 	"github.com/hidevopsio/hiboot/pkg/log"
+	_ "github.com/hidevopsio/kube-starter/pkg/kubeclient"
 	"github.com/jinzhu/copier"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -32,7 +34,7 @@ func init() {
 }
 
 // Manager is the controller runtime manager
-func (c *configuration) Manager(scheme *runtime.Scheme) (mgr manager.Manager, err error) {
+func (c *configuration) Manager(scheme *runtime.Scheme, cfg *rest.Config) (mgr manager.Manager, err error) {
 	opts := zap.Options{
 		Development: c.Properties.Development,
 	}
@@ -58,7 +60,7 @@ func (c *configuration) Manager(scheme *runtime.Scheme) (mgr manager.Manager, er
 		options.SyncPeriod = &second
 	}
 
-	options.LeaderElectionConfig, err = Kubeconfig()
+	options.LeaderElectionConfig = cfg
 
 	mgr, err = ctrl.NewManager(ctrl.GetConfigOrDie(), options)
 

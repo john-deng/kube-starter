@@ -27,6 +27,7 @@ import (
 	"github.com/hidevopsio/hiboot/pkg/app/web"
 	"github.com/hidevopsio/hiboot/pkg/starter/actuator"
 	"github.com/hidevopsio/hiboot/pkg/starter/logging"
+	"github.com/hidevopsio/kube-starter/pkg/kubeclient"
 	"github.com/hidevopsio/kube-starter/pkg/operator"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -60,6 +61,7 @@ func main() {
 			actuator.Profile,
 			logging.Profile,
 			operator.Profile,
+			kubeclient.Profile,
 		).
 		Run()
 }

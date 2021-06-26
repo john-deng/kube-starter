@@ -8,6 +8,8 @@ app:
       - actuator
       - logging
       - operator
+      - kubeclient
+      - oidc
 operator:
   healthProbeBindAddress: :8081
   metricsBindAddress: :8082

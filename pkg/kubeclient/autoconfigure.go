@@ -4,8 +4,10 @@ import (
 	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/at"
+	"github.com/hidevopsio/kube-starter/pkg/kubeconfig"
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -27,6 +29,11 @@ func init() {
 	app.Register(newConfiguration)
 }
 
+func (c *configuration) RestConfig() (cfg *rest.Config, err error) {
+	cfg, err = kubeconfig.Kubeconfig(c.Properties.DefaultInCluster)
+	return
+}
+
 // Client is the encapsulation of the default kube client
 type Client struct {
 	//at.ContextAware
@@ -36,13 +43,10 @@ type Client struct {
 	//Context context.Context `json:"context"`
 }
 
-func (c *configuration) Client(scheme *runtime.Scheme) (cli *Client) {
+func (c *configuration) Client(scheme *runtime.Scheme, cfg *rest.Config) (cli *Client, err error) {
 
-	newCli, _ := KubeClient(scheme, c.Properties.DefaultInCluster)
-
-	cli = &Client{
-		Client: newCli,
-	}
+	cli = &Client{}
+	cli.Client, err = KubeClient(scheme, cfg)
 
 	return
 }

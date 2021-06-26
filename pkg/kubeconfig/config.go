@@ -1,4 +1,4 @@
-package operator
+package kubeconfig
 
 import (
 	"os"
@@ -7,10 +7,6 @@ import (
 	"github.com/hidevopsio/hiboot/pkg/log"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-)
-
-const (
-	Subject = "subject"
 )
 
 // DefaultKubeconfig load default kube config
@@ -28,9 +24,12 @@ func DefaultKubeconfig() string {
 }
 
 // Kubeconfig new kube config
-func Kubeconfig() (cfg *rest.Config, err error) {
-	cfg, err = rest.InClusterConfig()
-	if err != nil {
+func Kubeconfig(inCluster *bool) (cfg *rest.Config, err error) {
+	if inCluster == nil || *inCluster {
+		cfg, err = rest.InClusterConfig()
+	}
+
+	if err != nil || inCluster != nil && !*inCluster {
 		cfg, err = clientcmd.BuildConfigFromFlags("", DefaultKubeconfig())
 		if err != nil {
 			log.Warnf("Error building kubeconfig: %s", err.Error())
@@ -38,3 +37,4 @@ func Kubeconfig() (cfg *rest.Config, err error) {
 	}
 	return
 }
+
