@@ -50,7 +50,9 @@ func (c *configuration) Token(ctx context.Context) (token *Token, err error) {
 	token.Data = strings.Replace(bearerToken, "Bearer ", "", -1)
 	token.Claims, err = DecodeWithoutVerify(token.Data)
 	if err != nil {
-		log.Error(err)
+		pe := err
+		err = errors.NewUnauthorized("Unauthorized")
+		log.Errorf("%v -> %v", pe, err)
 	}
 	return
 }
