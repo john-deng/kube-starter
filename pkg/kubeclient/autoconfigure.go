@@ -4,6 +4,7 @@ import (
 	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/at"
+	"github.com/hidevopsio/hiboot/pkg/utils/cmap"
 	"github.com/hidevopsio/kube-starter/pkg/kubeconfig"
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -15,14 +16,22 @@ const (
 	Profile = "kubeclient"
 )
 
+type clientCache struct {
+	client client.Client
+	uid string
+	token string
+}
+
 type configuration struct {
 	at.AutoConfiguration
 
 	Properties *Properties
+
+	clients cmap.ConcurrentMap
 }
 
 func newConfiguration() *configuration {
-	return &configuration{}
+	return &configuration{clients: cmap.New()}
 }
 
 func init() {
@@ -104,15 +113,31 @@ type RuntimeClient struct {
 
 func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *RuntimeClient, err error) {
 	cli = new(RuntimeClient)
+	var newClient client.Client
+	var ok bool
+	var cachedClient interface{}
 
-	newCli, err := RuntimeKubeClient(scheme, token, true, c.Properties.DefaultInCluster)
-	if err != nil {
-		return
+	uid := token.Claims.Issuer + "#" + token.Claims.Subject
+	cachedClient, ok = c.clients.Get(uid)
+	if ok {
+		cc := cachedClient.(clientCache)
+		if cc.token == token.Data {
+			newClient = cc.client
+		}
+	}
+
+	if newClient == nil {
+		newClient, err = RuntimeKubeClient(scheme, token, true, c.Properties.DefaultInCluster)
+		if err != nil {
+			return
+		}
+
+		c.clients.Set(uid, clientCache{client: newClient, uid: token.Claims.Username, token: token.Data})
 	}
 
 	cli = &RuntimeClient{
 		Context: ctx,
-		Client: newCli,
+		Client: newClient,
 	}
 	return
 }
