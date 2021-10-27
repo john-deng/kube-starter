@@ -38,7 +38,7 @@ func RuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bool,
 			cfg.BearerToken = token.Data
 			cfg.BearerTokenFile = ""
 		} else {
-			cfg.Impersonate.UserName = token.Claims.Username
+			cfg.Impersonate.UserName = token.Claims.Email
 		}
 	} else {
 		log.Warn("Unauthorized")
