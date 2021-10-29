@@ -24,9 +24,9 @@ func KubeClient(scheme *runtime.Scheme, cfg *rest.Config) (k8sClient client.Clie
 }
 
 // RuntimeKubeClient new runtime kube client
-func RuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bool, inCluster *bool) (cli client.Client, err error)  {
+func RuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bool, properties *Properties) (cli client.Client, err error)  {
 	var cfg *rest.Config
-	cfg, err = kubeconfig.Kubeconfig(inCluster)
+	cfg, err = kubeconfig.Kubeconfig(properties.DefaultInCluster)
 	if err != nil {
 		log.Warn(err)
 		return
@@ -38,7 +38,16 @@ func RuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bool,
 			cfg.BearerToken = token.Data
 			cfg.BearerTokenFile = ""
 		} else {
-			cfg.Impersonate.UserName = token.Claims.Email
+			switch properties.OIDCScope {
+			case "email":
+				cfg.Impersonate.UserName = token.Claims.Email
+			case "profile":
+				cfg.Impersonate.UserName = token.Claims.Username
+			case "openid":
+				cfg.Impersonate.UserName = token.Claims.Issuer + "#" + token.Claims.Subject
+			default:
+				cfg.Impersonate.UserName = token.Claims.Email
+			}
 		}
 	} else {
 		log.Warn("Unauthorized")

@@ -11,4 +11,7 @@ type Properties struct {
 
 	// use DefaultInCluster as default
 	DefaultInCluster *bool `json:"defaultInCluster"`
+
+	//OIDC Scope Impersonate
+	OIDCScope string `json:"oidcScope"`
 }
