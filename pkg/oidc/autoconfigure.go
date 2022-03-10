@@ -1,13 +1,14 @@
 package oidc
 
 import (
+	"strings"
+	"time"
+
 	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/at"
 	"github.com/hidevopsio/hiboot/pkg/log"
 	"k8s.io/apimachinery/pkg/api/errors"
-
-	"strings"
 )
 
 const (
@@ -53,6 +54,10 @@ func (c *configuration) Token(ctx context.Context) (token *Token, err error) {
 		pe := err
 		err = errors.NewUnauthorized("Unauthorized")
 		log.Errorf("%v -> %v", pe, err)
+	}
+	if token.Claims.Expiry.Before(time.Now()) {
+		err = errors.NewUnauthorized("Expired")
+		log.Errorf("%v", err)
 	}
 	return
 }
