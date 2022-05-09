@@ -54,6 +54,7 @@ func (c *configuration) Token(ctx context.Context) (token *Token, err error) {
 		pe := err
 		err = errors.NewUnauthorized("Unauthorized")
 		log.Errorf("%v -> %v", pe, err)
+		return  // fixes the nil pointer issue
 	}
 	if token.Claims.Expiry.Before(time.Now()) {
 		err = errors.NewUnauthorized("Expired")
