@@ -34,8 +34,10 @@ func KubeClient(scheme *runtime.Scheme, cfg *rest.Config) (k8sClient client.Clie
 				time.Sleep(time.Second)
 			}
 		}()
+	} else {
+		log.Info("Got kube client")
 	}
-	log.Info("Got kube client")
+
 	return
 }
 
