@@ -18,13 +18,16 @@ const (
 )
 
 // KubeClient new kube client
-func KubeClient(scheme *runtime.Scheme, cfg *rest.Config) (k8sClient client.Client, err error)  {
+func KubeClient(scheme *runtime.Scheme, cfg *rest.Config) (k8sClient client.Client, err error) {
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
+	if k8sClient == nil {
+		panic("Kubernetes API Server is not ready yet")
+	}
 	return
 }
 
 // RuntimeKubeClient new runtime kube client
-func RuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bool, properties *Properties) (cli client.Client, err error)  {
+func RuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bool, properties *Properties) (cli client.Client, err error) {
 	var cfg *rest.Config
 	cfg, err = kubeconfig.Kubeconfig(properties.DefaultInCluster)
 	if err != nil {
