@@ -2,16 +2,15 @@ package kubeclient
 
 import (
 	"github.com/hidevopsio/hiboot/pkg/app"
+	"github.com/hidevopsio/hiboot/pkg/log"
 	"github.com/hidevopsio/kube-starter/pkg/kubeconfig"
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"os"
-	"time"
-
-	"github.com/hidevopsio/hiboot/pkg/log"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 )
 
 const (
@@ -21,15 +20,22 @@ const (
 // KubeClient new kube client
 func KubeClient(scheme *runtime.Scheme, cfg *rest.Config) (k8sClient client.Client, err error) {
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
-	for k8sClient == nil {
+	if k8sClient == nil {
 		go func() {
-			k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
-			if err == nil && k8sClient != nil {
-				app.Register(k8sClient)
+			var count int
+			for k8sClient == nil {
+				count++
+				k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
+				if err == nil && k8sClient != nil {
+					app.Register(k8sClient)
+					log.Infof("Got kube client by retry %v times: %v", k8sClient, count)
+					break
+				}
+				time.Sleep(time.Second)
 			}
-			time.Sleep(time.Second)
 		}()
 	}
+	log.Info("Got kube client")
 	return
 }
 
