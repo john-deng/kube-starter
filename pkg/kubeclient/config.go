@@ -1,7 +1,9 @@
 package kubeclient
 
 import (
+	"github.com/hidevopsio/hiboot/pkg/app"
 	"os"
+	"time"
 
 	"github.com/hidevopsio/kube-starter/pkg/kubeconfig"
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
@@ -20,8 +22,12 @@ const (
 // KubeClient new kube client
 func KubeClient(scheme *runtime.Scheme, cfg *rest.Config) (k8sClient client.Client, err error) {
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
-	if k8sClient == nil {
-		panic("Kubernetes API Server is not ready yet")
+	for k8sClient == nil {
+		k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
+		if err == nil && k8sClient != nil {
+			app.Register(k8sClient)
+		}
+		time.Sleep(time.Second)
 	}
 	return
 }
