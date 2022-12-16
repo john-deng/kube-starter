@@ -2,12 +2,11 @@ package kubeclient
 
 import (
 	"github.com/hidevopsio/hiboot/pkg/app"
-	"os"
-	"time"
-
 	"github.com/hidevopsio/kube-starter/pkg/kubeconfig"
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"os"
+	"time"
 
 	"github.com/hidevopsio/hiboot/pkg/log"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -23,11 +22,13 @@ const (
 func KubeClient(scheme *runtime.Scheme, cfg *rest.Config) (k8sClient client.Client, err error) {
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
 	for k8sClient == nil {
-		k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
-		if err == nil && k8sClient != nil {
-			app.Register(k8sClient)
-		}
-		time.Sleep(time.Second)
+		go func() {
+			k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
+			if err == nil && k8sClient != nil {
+				app.Register(k8sClient)
+			}
+			time.Sleep(time.Second)
+		}()
 	}
 	return
 }
