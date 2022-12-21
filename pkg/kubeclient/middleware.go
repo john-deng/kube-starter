@@ -35,7 +35,7 @@ func (m *middleware) CheckKubeClient(_ struct {
 	if client.Client == nil {
 		err = ErrNilKubeClient
 		log.Warn(err)
-		ctx.ResponseString(err.Error())
+		ctx.ResponseBody(err.Error(), nil)
 		return
 	}
 	log.Debug("Got kube client from middleware")
