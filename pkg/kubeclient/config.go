@@ -1,82 +1,75 @@
 package kubeclient
 
 import (
-	"github.com/hidevopsio/kube-starter/pkg/oidc"
-	"net/http"
-	"os"
-	"path/filepath"
-
-	"github.com/hidevopsio/hiboot/pkg/app/web/context"
+	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/log"
+	"github.com/hidevopsio/kube-starter/pkg/kubeconfig"
+	"github.com/hidevopsio/kube-starter/pkg/oidc"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 )
 
 const (
 	Subject = "subject"
 )
 
-// DefaultKubeconfig
-func DefaultKubeconfig() string {
-	fname := os.Getenv("KUBECONFIG")
-	if fname != "" {
-		return fname
-	}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		log.Warnf("failed to get home directory: %v", err)
-		return ""
-	}
-	return filepath.Join(home, ".kube", "config")
-}
-
-// Kubeconfig
-func Kubeconfig() (cfg *rest.Config, err error) {
-	cfg, err = rest.InClusterConfig()
-	if err != nil {
-		cfg, err = clientcmd.BuildConfigFromFlags("", DefaultKubeconfig())
-		if err != nil {
-			log.Warnf("Error building kubeconfig: %s", err.Error())
-		}
-	}
-	return
-}
-
-// KubeClient
-func KubeClient(scheme *runtime.Scheme) (k8sClient client.Client, err error)  {
-	var cfg *rest.Config
-	cfg, err = Kubeconfig()
-	if err != nil {
-		log.Warn(err)
-		return
-	}
-	//cfg.Impersonate.UserName = ""
-	//cfg.BearerToken = ""
+// KubeClient new kube client
+func KubeClient(scheme *runtime.Scheme, cfg *rest.Config) (k8sClient client.Client, err error) {
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
+	if k8sClient == nil {
+		go func() {
+			var count int
+			for k8sClient == nil {
+				count++
+				k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
+				if err == nil && k8sClient != nil {
+					app.Register(k8sClient)
+					log.Infof("Got kube client by retry %v times: %v", k8sClient, count)
+					break
+				}
+				time.Sleep(time.Second)
+			}
+		}()
+	} else {
+		log.Info("Got kube client")
+	}
+
 	return
 }
 
-// RuntimeKubeClient
-func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token, useToken bool) (cli client.Client, err error)  {
+// RuntimeKubeClient new runtime kube client
+func RuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bool, properties *Properties) (cli client.Client, err error) {
 	var cfg *rest.Config
-	cfg, err = Kubeconfig()
+	cfg, err = kubeconfig.Kubeconfig(properties.DefaultInCluster)
 	if err != nil {
 		log.Warn(err)
 		return
 	}
 
 	if token != nil && token.Claims != nil && token.Data != "" {
-		if useToken {
+		kubeServiceHost := os.Getenv("KUBERNETES_SERVICE_HOST")
+		if kubeServiceHost == "" && useToken {
 			cfg.BearerToken = token.Data
+			cfg.BearerTokenFile = ""
 		} else {
-			cfg.Impersonate.UserName = token.Claims.Issuer + "#" + token.Claims.Subject
+			switch properties.OIDCScope {
+			case "email":
+				cfg.Impersonate.UserName = token.Claims.Email
+			case "profile":
+				cfg.Impersonate.UserName = token.Claims.Username
+			case "openid":
+				cfg.Impersonate.UserName = token.Claims.Issuer + "#" + token.Claims.Subject
+			default:
+				cfg.Impersonate.UserName = token.Claims.Email
+			}
 		}
 	} else {
-		// unauthorized user
-		ctx.StatusCode(http.StatusUnauthorized)
 		log.Warn("Unauthorized")
+		err = errors.NewUnauthorized("Unauthorized")
 		return
 	}
 
@@ -86,4 +79,3 @@ func RuntimeKubeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.
 	}
 	return
 }
-

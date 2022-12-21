@@ -34,7 +34,7 @@ func DecodeWithoutVerify(s string) (c *Claims, err error) {
 	if err := json.Indent(&prettyJson, payload, "", "  "); err != nil {
 		return nil, fmt.Errorf("could not indent the json of token: %w", err)
 	}
-	return &Claims{
+	cls := &Claims{
 		Issuer:   claims.Issuer,
 		Subject:  claims.Subject,
 		Name:     claims.Name,
@@ -42,7 +42,14 @@ func DecodeWithoutVerify(s string) (c *Claims, err error) {
 		Email:    claims.Email,
 		Expiry:   time.Unix(claims.ExpiresAt, 0),
 		Pretty:   prettyJson.String(),
-	}, nil
+	}
+
+	// fill username as the value of name if it is empty
+	if cls.Username == "" {
+		cls.Username = cls.Name
+	}
+
+	return cls, nil
 }
 
 // DecodePayloadAsPrettyJSON decodes the JWT string and returns the pretty JSON string.

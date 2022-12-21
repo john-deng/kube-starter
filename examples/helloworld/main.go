@@ -19,6 +19,7 @@ package main
 // import web starter from hiboot
 import (
 	"context"
+
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
 
 	"github.com/hidevopsio/hiboot/pkg/app"
@@ -57,7 +58,7 @@ func (c *Controller) ListPods(_ struct {
 	at.Operation  `id:"List Pods" description:"List Pods of giving namespace"`
 	at.Consumes   `values:"application/json"`
 	at.Produces   `values:"application/json"`
-	Parameters struct {
+	Parameters    struct {
 		at.Parameter `type:"string" name:"namespace" in:"path" description:"Path Variable（Namespace）" required:"true"`
 	}
 	Responses struct {
@@ -80,7 +81,6 @@ func (c *Controller) ListPods(_ struct {
 	return
 }
 
-
 type ServiceListResponse struct {
 	model.BaseResponseInfo
 	Data *corev1.ServiceList `json:"data"`
@@ -92,7 +92,7 @@ func (c *Controller) ListServices(_ struct {
 	at.Operation  `id:"List Services" description:"List Services of giving namespace"`
 	at.Consumes   `values:"application/json"`
 	at.Produces   `values:"application/json"`
-	Parameters struct {
+	Parameters    struct {
 		at.Parameter `type:"string" name:"namespace" in:"path" description:"Path Variable（Namespace）" required:"true"`
 	}
 	Responses struct {
@@ -101,7 +101,7 @@ func (c *Controller) ListServices(_ struct {
 			ServiceListResponse
 		}
 	}
-}, namespace string, cli *kubeclient.TokenizeClient) (response *ServiceListResponse, err error) {
+}, namespace string, cli *kubeclient.RuntimeClient) (response *ServiceListResponse, err error) {
 	response = new(ServiceListResponse)
 	var serviceList corev1.ServiceList
 	if cli.Client != nil {
@@ -115,7 +115,6 @@ func (c *Controller) ListServices(_ struct {
 	return
 }
 
-
 type DeploymentListResponse struct {
 	model.BaseResponseInfo
 	Data *appsv1.DeploymentList `json:"data"`
@@ -127,7 +126,7 @@ func (c *Controller) ListDeployment(_ struct {
 	at.Operation  `id:"List Deployments" description:"List Deployments of giving namespace"`
 	at.Consumes   `values:"application/json"`
 	at.Produces   `values:"application/json"`
-	Parameters struct {
+	Parameters    struct {
 		at.Parameter `type:"string" name:"namespace" in:"path" description:"Path Variable（Namespace）" required:"true"`
 	}
 	Responses struct {
@@ -155,25 +154,25 @@ func (c *Controller) ListDeployment(_ struct {
 	return
 }
 
-func newController(client *kubeclient.Client) *Controller  {
+func newController(client *kubeclient.Client) *Controller {
 	return &Controller{client: client}
 }
 
 // main function
 func main() {
-	scheme  := runtime.NewScheme()
+	scheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	app.Register(
 		scheme,
 		newController,
 		swagger.ApiInfoBuilder().
-		Title("HiBoot Example - Hello world").
-		Description("This is an example that demonstrate the basic usage"))
+			Title("HiBoot Example - Hello world").
+			Description("This is an example that demonstrate the basic usage"))
 
 	// create new web application and run it
 	web.NewApplication().
-		SetProperty(app.ProfilesInclude, swagger.Profile, web.Profile, actuator.Profile).
+		SetProperty(app.ProfilesInclude, swagger.Profile, web.Profile, actuator.Profile, kubeclient.Profile, oidc.Profile).
 		SetProperty("logging.level", "debug").
 		Run()
 }

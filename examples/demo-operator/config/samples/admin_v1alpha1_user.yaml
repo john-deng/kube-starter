@@ -1,0 +1,8 @@
+apiVersion: admin.icloudnative.net/v1alpha1
+kind: User
+metadata:
+  name: admin
+spec:
+  # Add fields here
+  name: Admin
+  email: admin@icloudnative.net
