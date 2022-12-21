@@ -35,6 +35,7 @@ func (m *middleware) CheckKubeClient(_ struct {
 	if client.Client == nil {
 		err = ErrNilKubeClient
 		log.Warn(err)
+		ctx.StatusCode(500)
 		ctx.ResponseBody(err.Error(), nil)
 		return
 	}
