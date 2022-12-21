@@ -43,7 +43,6 @@ func (m *middleware) CheckKubeClient(_ struct {
 			app.Register(kubeclient)
 			log.Infof("Got kube client by retry %v", kubeclient)
 		} else {
-			err = ErrNilKubeClient
 			log.Warn(err)
 			ctx.StatusCode(500)
 			ctx.ResponseBody(err.Error(), nil)
