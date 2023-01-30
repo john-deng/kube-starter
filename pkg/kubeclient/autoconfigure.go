@@ -23,20 +23,41 @@ type clientCache struct {
 	token  string
 }
 
+type KubeRuntimeClients struct {
+	clients cmap.ConcurrentMap
+}
+
+func (c *KubeRuntimeClients) Get(uid string) (client client.Client, ok bool) {
+	var cachedClient interface{}
+	cachedClient, ok = c.clients.Get(uid)
+	if ok {
+		cc := cachedClient.(clientCache)
+		log.Infof("%v reuse cached runtime client", uid)
+		client = cc.client
+	}
+	return
+}
+
+func (c *KubeRuntimeClients) Set(uid string, client client.Client) {
+	c.clients.Set(uid, clientCache{client: client, uid: uid})
+	return
+}
+
 type configuration struct {
 	at.AutoConfiguration
 
 	Properties *Properties
 
-	clients cmap.ConcurrentMap
+	kubeRuntimeClients *KubeRuntimeClients
 }
 
-func newConfiguration() *configuration {
-	return &configuration{clients: cmap.New()}
+func newConfiguration(kubeClients *KubeRuntimeClients) *configuration {
+	kubeClients.clients = cmap.New()
+	return &configuration{kubeRuntimeClients: kubeClients}
 }
 
 func init() {
-	app.Register(newConfiguration)
+	app.Register(new(KubeRuntimeClients), newConfiguration)
 }
 
 func (c *configuration) RestConfig() (cfg *rest.Config, err error) {
@@ -61,7 +82,7 @@ func (c *configuration) Client(scheme *runtime.Scheme, cfg *rest.Config) (cli *C
 	return
 }
 
-// ImpersonateClient is the client the impersonate kube client
+// ImpersonateClient is the client impersonate kube client
 type ImpersonateClient struct {
 	at.ContextAware
 
@@ -82,7 +103,7 @@ func (c *configuration) ImpersonateClient(ctx context.Context, scheme *runtime.S
 	return
 }
 
-// TokenizeClient is the client the tokenize kube client
+// TokenizeClient is the client tokenize kube client
 type TokenizeClient struct {
 	at.ContextAware
 
@@ -116,28 +137,17 @@ func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Schem
 	cli = new(RuntimeClient)
 	var newClient client.Client
 	var ok bool
-	var cachedClient interface{}
 
 	uid := token.Claims.Username
-	cachedClient, ok = c.clients.Get(uid)
-	if ok {
-		cc := cachedClient.(clientCache)
-		if cc.token != token.Data {
-			log.Info("Update runtime client with new token")
-			c.clients.Set(uid, clientCache{client: cc.client, uid: uid, token: token.Data})
-		}
-		log.Infof("%v Reuse cached runtime client", uid)
-		newClient = cc.client
-	}
-
-	if newClient == nil {
-		log.Info("Create new runtime client")
+	newClient, ok = c.kubeRuntimeClients.Get(uid)
+	if !ok {
 		newClient, err = RuntimeKubeClient(scheme, token, true, c.Properties)
 		if err != nil {
+			log.Error(err)
 			return
 		}
-
-		c.clients.Set(uid, clientCache{client: newClient, uid: uid, token: token.Data})
+		log.Infof("%v create new runtime client", uid)
+		c.kubeRuntimeClients.Set(uid, newClient)
 	}
 
 	cli = &RuntimeClient{

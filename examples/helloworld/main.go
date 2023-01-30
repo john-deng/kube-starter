@@ -19,6 +19,7 @@ package main
 // import web starter from hiboot
 import (
 	"context"
+	"github.com/hidevopsio/hiboot/pkg/log"
 
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
 
@@ -44,7 +45,8 @@ type Controller struct {
 	at.RestController
 	at.RequestMapping `value:"/api/v1/namespaces/{namespace}"`
 
-	client *kubeclient.Client
+	client             *kubeclient.Client
+	kubeRuntimeClients *kubeclient.KubeRuntimeClients
 }
 
 type PodListResponse struct {
@@ -101,7 +103,7 @@ func (c *Controller) ListServices(_ struct {
 			ServiceListResponse
 		}
 	}
-}, namespace string, cli *kubeclient.RuntimeClient) (response *ServiceListResponse, err error) {
+}, namespace string, cli *kubeclient.RuntimeClient, token *oidc.Token) (response *ServiceListResponse, err error) {
 	response = new(ServiceListResponse)
 	var serviceList corev1.ServiceList
 	if cli.Client != nil {
@@ -110,6 +112,8 @@ func (c *Controller) ListServices(_ struct {
 			response.Data = &serviceList
 		}
 	}
+	kc, ok := c.kubeRuntimeClients.Get(token.Claims.Username)
+	log.Infof("username: %v, kc: %v, ok: %v", token.Claims.Username, kc, ok)
 
 	// response
 	return
@@ -154,8 +158,8 @@ func (c *Controller) ListDeployment(_ struct {
 	return
 }
 
-func newController(client *kubeclient.Client) *Controller {
-	return &Controller{client: client}
+func newController(client *kubeclient.Client, clients *kubeclient.KubeRuntimeClients) *Controller {
+	return &Controller{client: client, kubeRuntimeClients: clients}
 }
 
 // main function
