@@ -126,7 +126,7 @@ func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Schem
 			log.Info("Update runtime client with new token")
 			c.clients.Set(uid, clientCache{client: cc.client, uid: uid, token: token.Data})
 		}
-		log.Info("Reuse cached runtime client")
+		log.Infof("%v Reuse cached runtime client", uid)
 		newClient = cc.client
 	}
 
