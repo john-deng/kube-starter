@@ -4,6 +4,7 @@ import (
 	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/at"
+	"github.com/hidevopsio/hiboot/pkg/log"
 	"github.com/hidevopsio/hiboot/pkg/utils/cmap"
 	"github.com/hidevopsio/kube-starter/pkg/kubeconfig"
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
@@ -18,8 +19,8 @@ const (
 
 type clientCache struct {
 	client client.Client
-	uid string
-	token string
+	uid    string
+	token  string
 }
 
 type configuration struct {
@@ -76,7 +77,7 @@ func (c *configuration) ImpersonateClient(ctx context.Context, scheme *runtime.S
 
 	cli = &ImpersonateClient{
 		Context: ctx,
-		Client: newCli,
+		Client:  newCli,
 	}
 	return
 }
@@ -97,7 +98,7 @@ func (c *configuration) TokenizeClient(ctx context.Context, scheme *runtime.Sche
 
 	cli = &TokenizeClient{
 		Context: ctx,
-		Client: newCli,
+		Client:  newCli,
 	}
 	return
 }
@@ -117,27 +118,31 @@ func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Schem
 	var ok bool
 	var cachedClient interface{}
 
-	uid := token.Claims.Issuer + "#" + token.Claims.Subject
+	uid := token.Claims.Username
 	cachedClient, ok = c.clients.Get(uid)
 	if ok {
 		cc := cachedClient.(clientCache)
-		if cc.token == token.Data {
-			newClient = cc.client
+		if cc.token != token.Data {
+			log.Info("Update runtime client with new token")
+			c.clients.Set(uid, clientCache{client: cc.client, uid: uid, token: token.Data})
 		}
+		log.Info("Reuse cached runtime client")
+		newClient = cc.client
 	}
 
 	if newClient == nil {
+		log.Info("Create new runtime client")
 		newClient, err = RuntimeKubeClient(scheme, token, true, c.Properties)
 		if err != nil {
 			return
 		}
 
-		c.clients.Set(uid, clientCache{client: newClient, uid: token.Claims.Username, token: token.Data})
+		c.clients.Set(uid, clientCache{client: newClient, uid: uid, token: token.Data})
 	}
 
 	cli = &RuntimeClient{
 		Context: ctx,
-		Client: newClient,
+		Client:  newClient,
 	}
 	return
 }
