@@ -69,6 +69,35 @@ func (c *Controller) ListPods(_ struct {
 			PodListResponse
 		}
 	}
+}, namespace string, cli *kubeclient.Client) (response *PodListResponse, err error) {
+	response = new(PodListResponse)
+	var podList corev1.PodList
+	if cli.Client != nil {
+		err = cli.List(context.TODO(), &podList, client.InNamespace(namespace))
+		if err == nil {
+			response.Data = &podList
+		}
+	}
+
+	// response
+	return
+}
+
+// Get GET /
+func (c *Controller) ListPodsByUser(_ struct {
+	at.GetMapping `value:"/pods/byuser"`
+	at.Operation  `id:"List Pods" description:"List Pods of giving namespace"`
+	at.Consumes   `values:"application/json"`
+	at.Produces   `values:"application/json"`
+	Parameters    struct {
+		at.Parameter `type:"string" name:"namespace" in:"path" description:"Path Variable（Namespace）" required:"true"`
+	}
+	Responses struct {
+		StatusOK struct {
+			at.Parameter `name:"Namespace" in:"body" description:"Get Pod List"`
+			PodListResponse
+		}
+	}
 }, namespace string, cli *kubeclient.RuntimeClient) (response *PodListResponse, err error) {
 	response = new(PodListResponse)
 	var podList corev1.PodList

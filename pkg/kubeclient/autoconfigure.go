@@ -97,7 +97,7 @@ type ImpersonateClient struct {
 func (c *configuration) ImpersonateClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token, cfg *rest.Config) (cli *ImpersonateClient) {
 	cli = new(ImpersonateClient)
 
-	newCli, _ := RuntimeKubeClient(scheme, token, false, c.Properties, cfg)
+	newCli, _ := RuntimeKubeClient(scheme, token, false, c.Properties)
 
 	cli = &ImpersonateClient{
 		Context: ctx,
@@ -118,7 +118,7 @@ type TokenizeClient struct {
 func (c *configuration) TokenizeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token, cfg *rest.Config) (cli *TokenizeClient) {
 	cli = new(TokenizeClient)
 
-	newCli, _ := RuntimeKubeClient(scheme, token, true, c.Properties, cfg)
+	newCli, _ := RuntimeKubeClient(scheme, token, true, c.Properties)
 
 	cli = &TokenizeClient{
 		Context: ctx,
@@ -144,7 +144,7 @@ func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Schem
 	uid := token.Claims.Username
 	newClient, ok = c.kubeRuntimeClients.Get(uid)
 	if !ok {
-		newClient, err = RuntimeKubeClient(scheme, token, true, c.Properties, cfg)
+		newClient, err = RuntimeKubeClient(scheme, token, true, c.Properties)
 		if err != nil {
 			log.Error(err)
 			return
