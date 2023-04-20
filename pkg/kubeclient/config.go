@@ -3,7 +3,6 @@ package kubeclient
 import (
 	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/log"
-	"github.com/hidevopsio/kube-starter/pkg/kubeconfig"
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -42,14 +41,7 @@ func KubeClient(scheme *runtime.Scheme, cfg *rest.Config) (k8sClient client.Clie
 }
 
 // RuntimeKubeClient new runtime kube client
-func RuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bool, properties *Properties) (cli client.Client, err error) {
-	var cfg *rest.Config
-	cfg, err = kubeconfig.Kubeconfig(properties.DefaultInCluster)
-	if err != nil {
-		log.Warn(err)
-		return
-	}
-
+func RuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bool, properties *Properties, cfg *rest.Config) (cli client.Client, err error) {
 	if token != nil && token.Claims != nil && token.Data != "" {
 		kubeServiceHost := os.Getenv("KUBERNETES_SERVICE_HOST")
 		if kubeServiceHost == "" && useToken {

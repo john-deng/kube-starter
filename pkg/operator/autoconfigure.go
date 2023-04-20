@@ -60,6 +60,8 @@ func (c *configuration) Manager(scheme *runtime.Scheme, cfg *rest.Config) (mgr m
 		options.SyncPeriod = &second
 	}
 
+	log.Infof("started operator with qps: %v, burst: %v", cfg.QPS, cfg.Burst)
+
 	mgr, err = ctrl.NewManager(cfg, options)
 
 	if err != nil {

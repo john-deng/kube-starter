@@ -2,6 +2,7 @@ package kubeclient
 
 import (
 	"github.com/hidevopsio/hiboot/pkg/at"
+	"time"
 )
 
 // Properties the operator properties
@@ -14,4 +15,13 @@ type Properties struct {
 
 	//OIDC Scope Impersonate
 	OIDCScope string `json:"oidcScope"`
+
+	QPS float32 `json:"qps"`
+
+	// Maximum burst for throttle.
+	// If it's zero, the created RESTClient will use DefaultBurst: 10.
+	Burst int `json:"burst"`
+
+	// The maximum length of time to wait before giving up on a server request. A value of zero means no timeout.
+	Timeout time.Duration `json:"timeout"`
 }

@@ -62,6 +62,9 @@ func init() {
 
 func (c *configuration) RestConfig() (cfg *rest.Config, err error) {
 	cfg, err = kubeconfig.Kubeconfig(c.Properties.DefaultInCluster)
+	cfg.QPS = c.Properties.QPS
+	cfg.Burst = c.Properties.Burst
+	cfg.Timeout = c.Properties.Timeout
 	return
 }
 
@@ -91,10 +94,10 @@ type ImpersonateClient struct {
 	Context context.Context `json:"context"`
 }
 
-func (c *configuration) ImpersonateClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *ImpersonateClient) {
+func (c *configuration) ImpersonateClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token, cfg *rest.Config) (cli *ImpersonateClient) {
 	cli = new(ImpersonateClient)
 
-	newCli, _ := RuntimeKubeClient(scheme, token, false, c.Properties)
+	newCli, _ := RuntimeKubeClient(scheme, token, false, c.Properties, cfg)
 
 	cli = &ImpersonateClient{
 		Context: ctx,
@@ -112,10 +115,10 @@ type TokenizeClient struct {
 	Context context.Context `json:"context"`
 }
 
-func (c *configuration) TokenizeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *TokenizeClient) {
+func (c *configuration) TokenizeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token, cfg *rest.Config) (cli *TokenizeClient) {
 	cli = new(TokenizeClient)
 
-	newCli, _ := RuntimeKubeClient(scheme, token, true, c.Properties)
+	newCli, _ := RuntimeKubeClient(scheme, token, true, c.Properties, cfg)
 
 	cli = &TokenizeClient{
 		Context: ctx,
@@ -133,7 +136,7 @@ type RuntimeClient struct {
 	Context context.Context `json:"context"`
 }
 
-func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token) (cli *RuntimeClient, err error) {
+func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token, cfg *rest.Config) (cli *RuntimeClient, err error) {
 	cli = new(RuntimeClient)
 	var newClient client.Client
 	var ok bool
@@ -141,7 +144,7 @@ func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Schem
 	uid := token.Claims.Username
 	newClient, ok = c.kubeRuntimeClients.Get(uid)
 	if !ok {
-		newClient, err = RuntimeKubeClient(scheme, token, true, c.Properties)
+		newClient, err = RuntimeKubeClient(scheme, token, true, c.Properties, cfg)
 		if err != nil {
 			log.Error(err)
 			return
