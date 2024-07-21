@@ -19,13 +19,17 @@ const (
 
 // KubeClient new kube client
 func KubeClient(scheme *runtime.Scheme, cfg *rest.Config) (k8sClient client.Client, err error) {
+	log.Info("Creating kube client")
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
+	log.Infof("created kube client: %v", k8sClient)
 	if k8sClient == nil {
 		go func() {
 			var count int
 			for k8sClient == nil {
 				count++
+				log.Info("Creating kube client")
 				k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
+				log.Infof("created kube client by retried %v times: %v", k8sClient, count)
 				if err == nil && k8sClient != nil {
 					app.Register(k8sClient)
 					log.Infof("Got kube client by retry %v times: %v", k8sClient, count)
