@@ -36,11 +36,17 @@ spec:
           spec:
             description: UserSpec defines the desired state of User
             properties:
+              age:
+                type: integer
               email:
                 type: string
               name:
                 description: Foo is an example field of User. Edit user_types.go to
                   remove/update
+                type: string
+              nickname:
+                type: string
+              phone:
                 type: string
             type: object
           status:
