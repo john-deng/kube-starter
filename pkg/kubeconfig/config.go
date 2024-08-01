@@ -12,7 +12,7 @@ import (
 )
 
 type ClusterInfo struct {
-	Name      string `value:"name"`
+	Name      string `json:"name"`
 	Config    string `json:"config"`
 	InCluster bool   `json:"inCluster"`
 }

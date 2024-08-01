@@ -30,8 +30,8 @@ type Client struct {
 	client.Client
 }
 
-type ClientFunc func(params ...interface{}) *Client
-type RuntimeClientFunc func(params ...interface{}) *RuntimeClient
+type FnClient func(params ...interface{}) *Client
+type FnRuntimeClient func(params ...interface{}) *RuntimeClient
 
 type configuration struct {
 	at.AutoConfiguration
@@ -67,14 +67,14 @@ func (c *configuration) ClusterConfig(prop *Properties) (cluster *kubeconfig.Clu
 	return
 }
 
-func (c *configuration) ClientFunc(clientFactory *instantiate.ScopedInstanceFactory[*Client]) (clientFunc ClientFunc, err error) {
+func (c *configuration) ClientFunc(clientFactory *instantiate.ScopedInstanceFactory[*Client]) (clientFunc FnClient, err error) {
 	clientFunc = func(params ...interface{}) *Client {
 		return clientFactory.GetInstance(params...)
 	}
 	return
 }
 
-func (c *configuration) RuntimeClientFunc(clientFactory *instantiate.ScopedInstanceFactory[*RuntimeClient]) (clientFunc RuntimeClientFunc, err error) {
+func (c *configuration) RuntimeClientFunc(clientFactory *instantiate.ScopedInstanceFactory[*RuntimeClient]) (clientFunc FnRuntimeClient, err error) {
 	clientFunc = func(params ...interface{}) *RuntimeClient {
 		return clientFactory.GetInstance(params...)
 	}
