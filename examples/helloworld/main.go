@@ -20,7 +20,6 @@ package main
 import (
 	"context"
 	"github.com/hidevopsio/hiboot/pkg/log"
-
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
 
 	"github.com/hidevopsio/hiboot/pkg/app"
@@ -44,9 +43,11 @@ type Controller struct {
 	// at.RestController or at.RestController must be embedded here
 	at.RestController
 	at.RequestMapping `value:"/api/v1/namespaces/{namespace}"`
+}
 
-	client             *kubeclient.Client
-	kubeRuntimeClients *kubeclient.KubeRuntimeClients
+func newController() *Controller {
+	log.Infof("newController")
+	return &Controller{}
 }
 
 type PodListResponse struct {
@@ -54,7 +55,7 @@ type PodListResponse struct {
 	Data *corev1.PodList `json:"data"`
 }
 
-// Get GET /
+// ListPods list all pods for specific namespace
 func (c *Controller) ListPods(_ struct {
 	at.GetMapping `value:"/pods"`
 	at.Operation  `id:"List Pods" description:"List Pods of giving namespace"`
@@ -69,21 +70,20 @@ func (c *Controller) ListPods(_ struct {
 			PodListResponse
 		}
 	}
-}, namespace string, cli *kubeclient.Client) (response *PodListResponse, err error) {
+}, namespace string, kubeClient kubeclient.ClientFunc) (response *PodListResponse, err error) {
 	response = new(PodListResponse)
 	var podList corev1.PodList
-	if cli.Client != nil {
-		err = cli.List(context.TODO(), &podList, client.InNamespace(namespace))
-		if err == nil {
-			response.Data = &podList
-		}
+
+	err = kubeClient().List(context.TODO(), &podList, client.InNamespace(namespace))
+	if err == nil {
+		response.Data = &podList
 	}
 
 	// response
 	return
 }
 
-// Get GET /
+// ListPodsByUser list all pods by user
 func (c *Controller) ListPodsByUser(_ struct {
 	at.GetMapping `value:"/pods/byuser"`
 	at.Operation  `id:"List Pods" description:"List Pods of giving namespace"`
@@ -98,17 +98,15 @@ func (c *Controller) ListPodsByUser(_ struct {
 			PodListResponse
 		}
 	}
-}, namespace string, cli *kubeclient.RuntimeClient) (response *PodListResponse, err error) {
+}, namespace string, cli kubeclient.RuntimeClientFunc) (response *PodListResponse, err error) {
 	response = new(PodListResponse)
 	var podList corev1.PodList
-	if cli.Client != nil {
-		err = cli.List(context.TODO(), &podList, client.InNamespace(namespace))
-		if err == nil {
-			response.Data = &podList
-		}
+
+	err = cli().List(context.TODO(), &podList, client.InNamespace(namespace))
+	if err == nil {
+		response.Data = &podList
 	}
 
-	// response
 	return
 }
 
@@ -117,7 +115,7 @@ type ServiceListResponse struct {
 	Data *corev1.ServiceList `json:"data"`
 }
 
-// Get GET /
+// ListServices list all services
 func (c *Controller) ListServices(_ struct {
 	at.GetMapping `value:"/services"`
 	at.Operation  `id:"List Services" description:"List Services of giving namespace"`
@@ -132,19 +130,15 @@ func (c *Controller) ListServices(_ struct {
 			ServiceListResponse
 		}
 	}
-}, namespace string, cli *kubeclient.RuntimeClient, token *oidc.Token) (response *ServiceListResponse, err error) {
+}, namespace string, cli kubeclient.RuntimeClientFunc) (response *ServiceListResponse, err error) {
 	response = new(ServiceListResponse)
 	var serviceList corev1.ServiceList
-	if cli.Client != nil {
-		err = cli.List(context.TODO(), &serviceList, client.InNamespace(namespace))
-		if err == nil {
-			response.Data = &serviceList
-		}
-	}
-	kc, ok := c.kubeRuntimeClients.Get(token.Claims.Username)
-	log.Infof("username: %v, kc: %v, ok: %v", token.Claims.Username, kc, ok)
 
-	// response
+	err = cli().List(context.TODO(), &serviceList, client.InNamespace(namespace))
+	if err == nil {
+		response.Data = &serviceList
+	}
+
 	return
 }
 
@@ -168,27 +162,22 @@ func (c *Controller) ListDeployment(_ struct {
 			PodListResponse
 		}
 	}
-}, namespace string, token *oidc.Token) (response *DeploymentListResponse, err error) {
+}, namespace string, token *oidc.Token, kubeClient kubeclient.ClientFunc) (response *DeploymentListResponse, err error) {
 	response = new(DeploymentListResponse)
 	var deploymentList appsv1.DeploymentList
-	if c.client != nil {
-		err = c.client.List(context.TODO(), &deploymentList, client.InNamespace(namespace))
-		if err == nil {
-			user := "unknown"
-			if token.Claims != nil {
-				user = token.Claims.Subject
-			}
-			response.Message = user + " Got Deployment List"
-			response.Data = &deploymentList
+
+	err = kubeClient().List(context.TODO(), &deploymentList, client.InNamespace(namespace))
+	if err == nil {
+		user := "unknown"
+		if token.Claims != nil {
+			user = token.Claims.Subject
 		}
+		response.Message = user + " Got Deployment List"
+		response.Data = &deploymentList
 	}
 
 	// response
 	return
-}
-
-func newController(client *kubeclient.Client, clients *kubeclient.KubeRuntimeClients) *Controller {
-	return &Controller{client: client, kubeRuntimeClients: clients}
 }
 
 // main function

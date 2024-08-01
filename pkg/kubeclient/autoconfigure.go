@@ -4,8 +4,8 @@ import (
 	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/at"
+	"github.com/hidevopsio/hiboot/pkg/factory/instantiate"
 	"github.com/hidevopsio/hiboot/pkg/log"
-	"github.com/hidevopsio/hiboot/pkg/utils/cmap"
 	"github.com/hidevopsio/kube-starter/pkg/kubeconfig"
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -17,67 +17,108 @@ const (
 	Profile = "kubeclient"
 )
 
-type clientCache struct {
-	client client.Client
-	uid    string
-	token  string
+type RestConfig struct {
+	at.Scope `value:"prototype"`
+
+	*rest.Config
 }
 
-type KubeRuntimeClients struct {
-	clients cmap.ConcurrentMap
+// Client is the encapsulation of the default kube client
+type Client struct {
+	at.Scope `value:"prototype"`
+
+	client.Client
 }
 
-func (c *KubeRuntimeClients) Get(uid string) (client client.Client, ok bool) {
-	var cachedClient interface{}
-	cachedClient, ok = c.clients.Get(uid)
-	if ok {
-		cc := cachedClient.(clientCache)
-		log.Infof("%v reuse cached runtime client", uid)
-		client = cc.client
-	}
-	return
-}
-
-func (c *KubeRuntimeClients) Set(uid string, client client.Client) {
-	c.clients.Set(uid, clientCache{client: client, uid: uid})
-	return
-}
+type ClientFunc func(params ...interface{}) *Client
+type RuntimeClientFunc func(params ...interface{}) *RuntimeClient
 
 type configuration struct {
 	at.AutoConfiguration
 
 	Properties *Properties
 
-	kubeRuntimeClients *KubeRuntimeClients
+	clientFactory        *instantiate.ScopedInstanceFactory[*Client]
+	runtimeClientFactory *instantiate.ScopedInstanceFactory[*RuntimeClient]
 }
 
-func newConfiguration(kubeClients *KubeRuntimeClients) *configuration {
-	kubeClients.clients = cmap.New()
-	return &configuration{kubeRuntimeClients: kubeClients}
+func newConfiguration(prop *Properties) *configuration {
+
+	return &configuration{Properties: prop}
 }
 
 func init() {
-	app.Register(new(KubeRuntimeClients), newConfiguration)
+	app.Register(
+		newConfiguration,
+		new(Properties),
+		new(instantiate.ScopedInstanceFactory[*Client]),
+		new(instantiate.ScopedInstanceFactory[*RuntimeClient]),
+	)
 }
 
-func (c *configuration) RestConfig() (cfg *rest.Config, err error) {
-	cfg, err = kubeconfig.Kubeconfig(c.Properties.DefaultInCluster)
-	cfg.QPS = c.Properties.QPS
-	cfg.Burst = c.Properties.Burst
-	cfg.Timeout = c.Properties.Timeout
+func (c *configuration) ClusterConfig(prop *Properties) (cluster *kubeconfig.ClusterConfig, err error) {
+	cluster = &kubeconfig.ClusterConfig{
+		ClusterInfo: kubeconfig.ClusterInfo{
+			Name:      "default",
+			Config:    "", // if config is empty, will use the default $HOME/.kube/config
+			InCluster: c.inCluster(prop),
+		},
+	}
 	return
 }
 
-// Client is the encapsulation of the default kube client
-type Client struct {
-	//at.ContextAware
-
-	client.Client
-
-	//Context context.Context `json:"context"`
+func (c *configuration) ClientFunc(clientFactory *instantiate.ScopedInstanceFactory[*Client]) (clientFunc ClientFunc, err error) {
+	clientFunc = func(params ...interface{}) *Client {
+		return clientFactory.GetInstance(params...)
+	}
+	return
 }
 
-func (c *configuration) Client(scheme *runtime.Scheme, cfg *rest.Config) (cli *Client, err error) {
+func (c *configuration) RuntimeClientFunc(clientFactory *instantiate.ScopedInstanceFactory[*RuntimeClient]) (clientFunc RuntimeClientFunc, err error) {
+	clientFunc = func(params ...interface{}) *RuntimeClient {
+		return clientFactory.GetInstance(params...)
+	}
+	return
+}
+
+func (c *configuration) inCluster(prop *Properties) bool {
+	var inCluster bool
+	if prop == nil {
+		inCluster = false
+	} else if prop.DefaultInCluster != nil {
+		inCluster = *prop.DefaultInCluster
+	}
+	return inCluster
+}
+
+func (c *configuration) RuntimeClusterConfig(ctx context.Context, token oidc.Token, prop *Properties) (cluster *kubeconfig.RuntimeClusterConfig, err error) {
+
+	clusterName := ctx.GetHeader("cluster")
+	if clusterName == "" {
+		clusterName = "default"
+	}
+	cluster = &kubeconfig.RuntimeClusterConfig{
+		ClusterInfo: kubeconfig.ClusterInfo{
+			Name:      clusterName,
+			Config:    ctx.GetHeader("config"),
+			InCluster: c.inCluster(prop),
+		},
+		Username: token.Claims.Username,
+	}
+	return
+}
+
+func (c *configuration) RestConfig(cluster *kubeconfig.ClusterConfig) (restConfig *RestConfig, err error) {
+	restConfig = new(RestConfig)
+
+	restConfig.Config, err = kubeconfig.Kubeconfig(&cluster.ClusterInfo)
+	restConfig.Config.QPS = c.Properties.QPS
+	restConfig.Config.Burst = c.Properties.Burst
+	restConfig.Config.Timeout = c.Properties.Timeout
+	return
+}
+
+func (c *configuration) Client(scheme *runtime.Scheme, cfg *RestConfig) (cli *Client, err error) {
 
 	cli = &Client{}
 	cli.Client, err = KubeClient(scheme, cfg)
@@ -85,72 +126,26 @@ func (c *configuration) Client(scheme *runtime.Scheme, cfg *rest.Config) (cli *C
 	return
 }
 
-// ImpersonateClient is the client impersonate kube client
-type ImpersonateClient struct {
-	at.ContextAware
-
-	client.Client
-
-	Context context.Context `json:"context"`
-}
-
-func (c *configuration) ImpersonateClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token, cfg *rest.Config) (cli *ImpersonateClient) {
-	cli = new(ImpersonateClient)
-
-	newCli, _ := RuntimeKubeClient(scheme, token, false, c.Properties)
-
-	cli = &ImpersonateClient{
-		Context: ctx,
-		Client:  newCli,
-	}
-	return
-}
-
-// TokenizeClient is the client tokenize kube client
-type TokenizeClient struct {
-	at.ContextAware
-
-	client.Client
-
-	Context context.Context `json:"context"`
-}
-
-func (c *configuration) TokenizeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token, cfg *rest.Config) (cli *TokenizeClient) {
-	cli = new(TokenizeClient)
-
-	newCli, _ := RuntimeKubeClient(scheme, token, true, c.Properties)
-
-	cli = &TokenizeClient{
-		Context: ctx,
-		Client:  newCli,
-	}
-	return
-}
-
 // RuntimeClient is the client the runtime kube client
 type RuntimeClient struct {
-	at.ContextAware
+	at.Scope `value:"prototype"`
 
 	client.Client
 
 	Context context.Context `json:"context"`
 }
 
-func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token, cfg *rest.Config) (cli *RuntimeClient, err error) {
+func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token, cluster *kubeconfig.RuntimeClusterConfig) (cli *RuntimeClient, err error) {
 	cli = new(RuntimeClient)
 	var newClient client.Client
-	var ok bool
 
 	uid := token.Claims.Username
-	newClient, ok = c.kubeRuntimeClients.Get(uid)
-	if !ok {
-		newClient, err = RuntimeKubeClient(scheme, token, true, c.Properties)
-		if err != nil {
-			log.Error(err)
-			return
-		}
-		log.Infof("%v create new runtime client", uid)
-		c.kubeRuntimeClients.Set(uid, newClient)
+	cluster.Username = uid
+
+	newClient, err = RuntimeKubeClient(scheme, token, true, c.Properties, cluster)
+	if err != nil {
+		log.Error(err)
+		return
 	}
 
 	cli = &RuntimeClient{

@@ -1,7 +1,6 @@
 package kubeclient
 
 import (
-	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/log"
 	"github.com/hidevopsio/kube-starter/pkg/kubeconfig"
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
@@ -10,7 +9,6 @@ import (
 	"k8s.io/client-go/rest"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
 const (
@@ -18,37 +16,24 @@ const (
 )
 
 // KubeClient new kube client
-func KubeClient(scheme *runtime.Scheme, cfg *rest.Config) (k8sClient client.Client, err error) {
+func KubeClient(scheme *runtime.Scheme, cfg *RestConfig) (k8sClient client.Client, err error) {
 	log.Info("Creating kube client")
-	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
+	k8sClient, err = client.New(cfg.Config, client.Options{Scheme: scheme})
 	log.Infof("created kube client: %v", k8sClient)
-	if k8sClient == nil {
-		go func() {
-			var count int
-			for k8sClient == nil {
-				count++
-				log.Info("Creating kube client")
-				k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
-				log.Infof("created kube client by retried %v times: %v", k8sClient, count)
-				if err == nil && k8sClient != nil {
-					app.Register(k8sClient)
-					log.Infof("Got kube client by retry %v times: %v", k8sClient, count)
-					break
-				}
-				time.Sleep(time.Second)
-			}
-		}()
-	} else {
-		log.Info("Got kube client")
-	}
-
 	return
 }
 
 // RuntimeKubeClient new runtime kube client
-func RuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bool, properties *Properties) (cli client.Client, err error) {
+func RuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bool, properties *Properties, cluster *kubeconfig.RuntimeClusterConfig) (cli client.Client, err error) {
 	var cfg *rest.Config
-	cfg, err = kubeconfig.Kubeconfig(properties.DefaultInCluster)
+	rcc := &kubeconfig.ClusterConfig{
+		ClusterInfo: kubeconfig.ClusterInfo{
+			Name:      cluster.Name,
+			Config:    cluster.Config,
+			InCluster: cluster.InCluster,
+		},
+	}
+	cfg, err = kubeconfig.Kubeconfig(&rcc.ClusterInfo)
 	if err != nil {
 		log.Warn(err)
 		return
