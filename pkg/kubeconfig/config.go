@@ -25,7 +25,7 @@ type ClusterConfig struct {
 }
 
 type RuntimeClusterConfig struct {
-	at.Scope              `value:"request"`
+	at.Scope              `value:"prototype"`
 	at.ConditionalOnField `value:"Name,Username"`
 
 	ClusterInfo

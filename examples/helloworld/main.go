@@ -18,7 +18,8 @@ package main
 
 // import web starter from hiboot
 import (
-	"context"
+	goctx "context"
+	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/log"
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
 
@@ -74,7 +75,7 @@ func (c *Controller) ListPods(_ struct {
 	response = new(PodListResponse)
 	var podList corev1.PodList
 
-	err = fnClient().List(context.TODO(), &podList, client.InNamespace(namespace))
+	err = fnClient().List(goctx.TODO(), &podList, client.InNamespace(namespace))
 	if err == nil {
 		response.Data = &podList
 	}
@@ -102,7 +103,7 @@ func (c *Controller) ListPodsByUser(_ struct {
 	response = new(PodListResponse)
 	var podList corev1.PodList
 
-	err = fnRuntimeClient().List(context.TODO(), &podList, client.InNamespace(namespace))
+	err = fnRuntimeClient(ctx).List(goctx.TODO(), &podList, client.InNamespace(namespace))
 	if err == nil {
 		response.Data = &podList
 	}
@@ -130,11 +131,11 @@ func (c *Controller) ListServices(_ struct {
 			ServiceListResponse
 		}
 	}
-}, namespace string, fnRuntimeClient kubeclient.FnRuntimeClient) (response *ServiceListResponse, err error) {
+}, namespace string, fnRuntimeClient kubeclient.FnRuntimeClient, ctx context.Context) (response *ServiceListResponse, err error) {
 	response = new(ServiceListResponse)
 	var serviceList corev1.ServiceList
 
-	err = fnRuntimeClient().List(context.TODO(), &serviceList, client.InNamespace(namespace))
+	err = fnRuntimeClient(ctx).List(goctx.TODO(), &serviceList, client.InNamespace(namespace))
 	if err == nil {
 		response.Data = &serviceList
 	}
@@ -166,7 +167,7 @@ func (c *Controller) ListDeployment(_ struct {
 	response = new(DeploymentListResponse)
 	var deploymentList appsv1.DeploymentList
 
-	err = fnClient().List(context.TODO(), &deploymentList, client.InNamespace(namespace))
+	err = fnClient().List(goctx.TODO(), &deploymentList, client.InNamespace(namespace))
 	if err == nil {
 		user := "unknown"
 		if token.Claims != nil {

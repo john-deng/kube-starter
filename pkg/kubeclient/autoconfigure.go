@@ -40,6 +40,8 @@ type configuration struct {
 
 	clientFactory        *instantiate.ScopedInstanceFactory[*Client]
 	runtimeClientFactory *instantiate.ScopedInstanceFactory[*RuntimeClient]
+	//clientConfigFactory        *instantiate.ScopedInstanceFactory[*kubeconfig.ClusterConfig]
+	//runtimeClientConfigFactory *instantiate.ScopedInstanceFactory[*kubeconfig.RuntimeClusterConfig]
 }
 
 func newConfiguration(prop *Properties) *configuration {
@@ -53,10 +55,13 @@ func init() {
 		new(Properties),
 		new(instantiate.ScopedInstanceFactory[*Client]),
 		new(instantiate.ScopedInstanceFactory[*RuntimeClient]),
+		//new(instantiate.ScopedInstanceFactory[*kubeconfig.ClusterConfig]),
+		//new(instantiate.ScopedInstanceFactory[*kubeconfig.RuntimeClusterConfig]),
 	)
 }
 
 func (c *configuration) ClusterConfig(prop *Properties) (cluster *kubeconfig.ClusterConfig, err error) {
+
 	cluster = &kubeconfig.ClusterConfig{
 		ClusterInfo: kubeconfig.ClusterInfo{
 			Name:      "default",
@@ -64,34 +69,11 @@ func (c *configuration) ClusterConfig(prop *Properties) (cluster *kubeconfig.Clu
 			InCluster: c.inCluster(prop),
 		},
 	}
+	log.Infof("ClusterConfig: %+v", cluster)
 	return
 }
 
-func (c *configuration) ClientFunc(clientFactory *instantiate.ScopedInstanceFactory[*Client]) (clientFunc FnClient, err error) {
-	clientFunc = func(params ...interface{}) *Client {
-		return clientFactory.GetInstance(params...)
-	}
-	return
-}
-
-func (c *configuration) RuntimeClientFunc(clientFactory *instantiate.ScopedInstanceFactory[*RuntimeClient]) (clientFunc FnRuntimeClient, err error) {
-	clientFunc = func(params ...interface{}) *RuntimeClient {
-		return clientFactory.GetInstance(params...)
-	}
-	return
-}
-
-func (c *configuration) inCluster(prop *Properties) bool {
-	var inCluster bool
-	if prop == nil {
-		inCluster = false
-	} else if prop.DefaultInCluster != nil {
-		inCluster = *prop.DefaultInCluster
-	}
-	return inCluster
-}
-
-func (c *configuration) RuntimeClusterConfig(ctx context.Context, token oidc.Token, prop *Properties) (cluster *kubeconfig.RuntimeClusterConfig, err error) {
+func (c *configuration) RuntimeClusterConfig(ctx context.Context, token *oidc.Token, prop *Properties) (cluster *kubeconfig.RuntimeClusterConfig, err error) {
 
 	clusterName := ctx.GetHeader("cluster")
 	if clusterName == "" {
@@ -104,6 +86,28 @@ func (c *configuration) RuntimeClusterConfig(ctx context.Context, token oidc.Tok
 			InCluster: c.inCluster(prop),
 		},
 		Username: token.Claims.Username,
+	}
+	log.Infof("RuntimeClusterConfig: %+v", cluster)
+	return
+}
+
+func (c *configuration) ClientFunc(clientFactory *instantiate.ScopedInstanceFactory[*Client]) (clientFunc FnClient, err error) {
+	clientFunc = func(params ...interface{}) *Client {
+		// TODO: check if param is a string which specify the cluster name
+		//cc := c.clientConfigFactory.GetInstance()
+		//params = append(params, cc)
+		return clientFactory.GetInstance(params...)
+	}
+	return
+}
+
+func (c *configuration) RuntimeClientFunc(clientFactory *instantiate.ScopedInstanceFactory[*RuntimeClient]) (clientFunc FnRuntimeClient, err error) {
+	clientFunc = func(params ...interface{}) *RuntimeClient {
+		// TODO: check if param is a string which specify the cluster name and username
+		//cc := c.runtimeClientConfigFactory.GetInstance(params...)
+		//params = append(params, cc)
+		rc := clientFactory.GetInstance(params...)
+		return rc
 	}
 	return
 }
@@ -153,4 +157,14 @@ func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Schem
 		Client:  newClient,
 	}
 	return
+}
+
+func (c *configuration) inCluster(prop *Properties) bool {
+	var inCluster bool
+	if prop == nil {
+		inCluster = false
+	} else if prop.DefaultInCluster != nil {
+		inCluster = *prop.DefaultInCluster
+	}
+	return inCluster
 }

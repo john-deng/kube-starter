@@ -7,7 +7,7 @@ toolchain go1.22.5
 require (
 	github.com/go-logr/logr v0.4.0
 	github.com/google/go-cmp v0.5.2
-	github.com/hidevopsio/hiboot v1.7.1-0.20240801085814-b520727d0cba
+	github.com/hidevopsio/hiboot v1.7.1-0.20240802045052-7c7331bc80af
 	github.com/jinzhu/copier v0.2.8
 	k8s.io/api v0.20.15
 	k8s.io/apimachinery v0.20.15
@@ -146,3 +146,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
+
+replace github.com/hidevopsio/hiboot v1.7.0 => ../hiboot
