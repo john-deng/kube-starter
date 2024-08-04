@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"github.com/hidevopsio/kube-starter/pkg/operator"
 	"os"
 
 	"github.com/go-logr/logr"
@@ -15,11 +16,11 @@ import (
 // UserReconciler reconciles a User object
 type UserReconciler struct {
 	client.Client
-	log logr.Logger
+	log    logr.Logger
 	Scheme *runtime.Scheme
 }
 
-func newUserReconciler(manager ctrl.Manager, scheme *runtime.Scheme) *UserReconciler {
+func newUserReconciler(manager *operator.Manager, scheme *runtime.Scheme) *UserReconciler {
 	log := ctrl.Log.WithName("controllers").WithName("admin").WithName("User")
 	reconciler := &UserReconciler{
 		Client: manager.GetClient(),
@@ -63,8 +64,8 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (resul
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *UserReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
+func (r *UserReconciler) SetupWithManager(mgr *operator.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr.Manager).
 		For(&adminv1alpha1.User{}).
 		Complete(r)
 }

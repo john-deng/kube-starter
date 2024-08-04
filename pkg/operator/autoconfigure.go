@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"github.com/hidevopsio/kube-starter/pkg/kubeclient"
 	"time"
 
 	"github.com/hidevopsio/hiboot/pkg/app"
@@ -9,7 +10,6 @@ import (
 	_ "github.com/hidevopsio/kube-starter/pkg/kubeclient"
 	"github.com/jinzhu/copier"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -18,6 +18,12 @@ import (
 const (
 	Profile = "operator"
 )
+
+type Manager struct {
+	//at.Scope `value:"prototype"`
+
+	manager.Manager
+}
 
 type configuration struct {
 	at.AutoConfiguration
@@ -34,7 +40,7 @@ func init() {
 }
 
 // Manager is the controller runtime manager
-func (c *configuration) Manager(scheme *runtime.Scheme, cfg *rest.Config) (mgr manager.Manager, err error) {
+func (c *configuration) Manager(scheme *runtime.Scheme, cfg *kubeclient.RestConfig) (mgr *Manager, err error) {
 	opts := zap.Options{
 		Development: c.Properties.Development,
 	}
@@ -61,8 +67,8 @@ func (c *configuration) Manager(scheme *runtime.Scheme, cfg *rest.Config) (mgr m
 	}
 
 	log.Infof("started operator with qps: %v, burst: %v", cfg.QPS, cfg.Burst)
-
-	mgr, err = ctrl.NewManager(cfg, options)
+	mgr = new(Manager)
+	mgr.Manager, err = ctrl.NewManager(cfg.Config, options)
 
 	if err != nil {
 		log.Error(err)
