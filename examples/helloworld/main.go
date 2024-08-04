@@ -71,16 +71,15 @@ func (c *Controller) ListPods(_ struct {
 			PodListResponse
 		}
 	}
-}, namespace string, fnClient kubeclient.FnClient) (response *PodListResponse, err error) {
+}, namespace string, kubeClient *kubeclient.Client) (response *PodListResponse, err error) {
 	response = new(PodListResponse)
 	var podList corev1.PodList
 
-	err = fnClient().List(goctx.TODO(), &podList, client.InNamespace(namespace))
+	err = kubeClient.List(goctx.TODO(), &podList, client.InNamespace(namespace))
 	if err == nil {
 		response.Data = &podList
 	}
 
-	// response
 	return
 }
 
@@ -99,11 +98,12 @@ func (c *Controller) ListPodsByUser(_ struct {
 			PodListResponse
 		}
 	}
-}, namespace string, fnRuntimeClient kubeclient.FnRuntimeClient, ctx context.Context) (response *PodListResponse, err error) {
+}, namespace string, runtimeClient *kubeclient.RuntimeClient, ctx context.Context) (response *PodListResponse, err error) {
 	response = new(PodListResponse)
 	var podList corev1.PodList
 
-	err = fnRuntimeClient(ctx).List(goctx.TODO(), &podList, client.InNamespace(namespace))
+	err = runtimeClient.List(goctx.TODO(), &podList, client.InNamespace(namespace))
+	// TODO: error handling
 	if err == nil {
 		response.Data = &podList
 	}
@@ -131,11 +131,11 @@ func (c *Controller) ListServices(_ struct {
 			ServiceListResponse
 		}
 	}
-}, namespace string, fnRuntimeClient kubeclient.FnRuntimeClient, ctx context.Context) (response *ServiceListResponse, err error) {
+}, namespace string, runtimeClient *kubeclient.RuntimeClient) (response *ServiceListResponse, err error) {
 	response = new(ServiceListResponse)
 	var serviceList corev1.ServiceList
 
-	err = fnRuntimeClient(ctx).List(goctx.TODO(), &serviceList, client.InNamespace(namespace))
+	err = runtimeClient.List(goctx.TODO(), &serviceList, client.InNamespace(namespace))
 	if err == nil {
 		response.Data = &serviceList
 	}
@@ -163,11 +163,11 @@ func (c *Controller) ListDeployment(_ struct {
 			PodListResponse
 		}
 	}
-}, namespace string, token *oidc.Token, fnClient kubeclient.FnClient) (response *DeploymentListResponse, err error) {
+}, namespace string, token *oidc.Token, kubeClient *kubeclient.Client) (response *DeploymentListResponse, err error) {
 	response = new(DeploymentListResponse)
 	var deploymentList appsv1.DeploymentList
 
-	err = fnClient().List(goctx.TODO(), &deploymentList, client.InNamespace(namespace))
+	err = kubeClient.List(goctx.TODO(), &deploymentList, client.InNamespace(namespace))
 	if err == nil {
 		user := "unknown"
 		if token.Claims != nil {

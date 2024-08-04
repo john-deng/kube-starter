@@ -1,3 +1,10 @@
+// Work flow:
+// 1. Create the kube client by the kube config
+//   - kube-starter will use the default kube config under config/kubeclient/default.yaml
+//   - if the config is empty, will use the default $HOME/.kube/config
+//   - if the config is not empty, will use the config file
+
+// Package kubeclient implement the kube client for the applications that use the API Server of kubernetes
 package kubeclient
 
 import (
@@ -30,18 +37,38 @@ type Client struct {
 	client.Client
 }
 
-type FnClient func(params ...interface{}) *Client
-type FnRuntimeClient func(params ...interface{}) *RuntimeClient
+// ClientCreation is the encapsulation of the default kube client
+type ClientCreation struct {
+	at.Scope `value:"prototype"`
+
+	client.Client
+}
+
+// RuntimeClient is the client the runtime kube client
+type RuntimeClient struct {
+	at.Scope `value:"prototype"`
+
+	client.Client
+
+	Context context.Context `json:"context"`
+}
+
+// RuntimeClientCreation is the client the runtime kube client
+type RuntimeClientCreation struct {
+	at.Scope `value:"prototype"`
+
+	client.Client
+
+	Context context.Context `json:"context"`
+}
 
 type configuration struct {
 	at.AutoConfiguration
 
 	Properties *Properties
 
-	clientFactory        *instantiate.ScopedInstanceFactory[*Client]
-	runtimeClientFactory *instantiate.ScopedInstanceFactory[*RuntimeClient]
-	//clientConfigFactory        *instantiate.ScopedInstanceFactory[*kubeconfig.ClusterConfig]
-	//runtimeClientConfigFactory *instantiate.ScopedInstanceFactory[*kubeconfig.RuntimeClusterConfig]
+	clientFactory        *instantiate.ScopedInstanceFactory[*ClientCreation]
+	runtimeClientFactory *instantiate.ScopedInstanceFactory[*RuntimeClientCreation]
 }
 
 func newConfiguration(prop *Properties) *configuration {
@@ -53,10 +80,8 @@ func init() {
 	app.Register(
 		newConfiguration,
 		new(Properties),
-		new(instantiate.ScopedInstanceFactory[*Client]),
-		new(instantiate.ScopedInstanceFactory[*RuntimeClient]),
-		//new(instantiate.ScopedInstanceFactory[*kubeconfig.ClusterConfig]),
-		//new(instantiate.ScopedInstanceFactory[*kubeconfig.RuntimeClusterConfig]),
+		new(instantiate.ScopedInstanceFactory[*ClientCreation]),
+		new(instantiate.ScopedInstanceFactory[*RuntimeClientCreation]),
 	)
 }
 
@@ -64,51 +89,11 @@ func (c *configuration) ClusterConfig(prop *Properties) (cluster *kubeconfig.Clu
 
 	cluster = &kubeconfig.ClusterConfig{
 		ClusterInfo: kubeconfig.ClusterInfo{
-			Name:      "default",
-			Config:    "", // if config is empty, will use the default $HOME/.kube/config
-			InCluster: c.inCluster(prop),
+			Name:   prop.Cluster.Name,
+			Config: prop.Cluster.Config, // if config is empty, will use the default $HOME/.kube/config
 		},
 	}
 	log.Infof("ClusterConfig: %+v", cluster)
-	return
-}
-
-func (c *configuration) RuntimeClusterConfig(ctx context.Context, token *oidc.Token, prop *Properties) (cluster *kubeconfig.RuntimeClusterConfig, err error) {
-
-	clusterName := ctx.GetHeader("cluster")
-	if clusterName == "" {
-		clusterName = "default"
-	}
-	cluster = &kubeconfig.RuntimeClusterConfig{
-		ClusterInfo: kubeconfig.ClusterInfo{
-			Name:      clusterName,
-			Config:    ctx.GetHeader("config"),
-			InCluster: c.inCluster(prop),
-		},
-		Username: token.Claims.Username,
-	}
-	log.Infof("RuntimeClusterConfig: %+v", cluster)
-	return
-}
-
-func (c *configuration) ClientFunc(clientFactory *instantiate.ScopedInstanceFactory[*Client]) (clientFunc FnClient, err error) {
-	clientFunc = func(params ...interface{}) *Client {
-		// TODO: check if param is a string which specify the cluster name
-		//cc := c.clientConfigFactory.GetInstance()
-		//params = append(params, cc)
-		return clientFactory.GetInstance(params...)
-	}
-	return
-}
-
-func (c *configuration) RuntimeClientFunc(clientFactory *instantiate.ScopedInstanceFactory[*RuntimeClient]) (clientFunc FnRuntimeClient, err error) {
-	clientFunc = func(params ...interface{}) *RuntimeClient {
-		// TODO: check if param is a string which specify the cluster name and username
-		//cc := c.runtimeClientConfigFactory.GetInstance(params...)
-		//params = append(params, cc)
-		rc := clientFactory.GetInstance(params...)
-		return rc
-	}
 	return
 }
 
@@ -122,49 +107,67 @@ func (c *configuration) RestConfig(cluster *kubeconfig.ClusterConfig) (restConfi
 	return
 }
 
-func (c *configuration) Client(scheme *runtime.Scheme, cfg *RestConfig) (cli *Client, err error) {
+func (c *configuration) ClientCreation(scheme *runtime.Scheme, cfg *RestConfig) (cli *ClientCreation, err error) {
 
-	cli = &Client{}
-	cli.Client, err = KubeClient(scheme, cfg)
+	cli = &ClientCreation{}
+	cli.Client, err = NewKubeClient(scheme, cfg)
 
 	return
 }
 
-// RuntimeClient is the client the runtime kube client
-type RuntimeClient struct {
-	at.Scope `value:"prototype"`
+func (c *configuration) Client(
+	cluster *kubeconfig.ClusterConfig,
+	clientFactory *instantiate.ScopedInstanceFactory[*ClientCreation],
+) (cli *Client, err error) {
+	cli = new(Client)
+	var kc *ClientCreation
+	kc, err = clientFactory.GetInstance(cluster)
+	if err == nil {
+		cli.Client = kc.Client
+	}
 
-	client.Client
-
-	Context context.Context `json:"context"`
+	return
 }
 
-func (c *configuration) RuntimeClient(ctx context.Context, scheme *runtime.Scheme, token *oidc.Token, cluster *kubeconfig.RuntimeClusterConfig) (cli *RuntimeClient, err error) {
-	cli = new(RuntimeClient)
+func (c *configuration) RuntimeClientCreation(
+	ctx context.Context,
+	scheme *runtime.Scheme,
+	token *oidc.Token,
+	cluster *kubeconfig.ClusterConfig,
+) (cli *RuntimeClientCreation, err error) {
+
+	cli = new(RuntimeClientCreation)
 	var newClient client.Client
 
-	uid := token.Claims.Username
-	cluster.Username = uid
-
-	newClient, err = RuntimeKubeClient(scheme, token, true, c.Properties, cluster)
+	newClient, err = NewRuntimeKubeClient(scheme, token, true, c.Properties, cluster)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	cli = &RuntimeClient{
+	cli = &RuntimeClientCreation{
 		Context: ctx,
 		Client:  newClient,
 	}
+
 	return
 }
 
-func (c *configuration) inCluster(prop *Properties) bool {
-	var inCluster bool
-	if prop == nil {
-		inCluster = false
-	} else if prop.DefaultInCluster != nil {
-		inCluster = *prop.DefaultInCluster
+func (c *configuration) RuntimeClient(
+	ctx context.Context,
+	token *oidc.Token,
+	cluster *kubeconfig.ClusterConfig,
+	runtimeClientFactory *instantiate.ScopedInstanceFactory[*RuntimeClientCreation],
+) (cli *RuntimeClient, err error) {
+
+	cli = new(RuntimeClient)
+	cluster.Username = token.Claims.Username
+	var rc *RuntimeClientCreation
+	rc, err = runtimeClientFactory.GetInstance(ctx, cluster)
+	if err == nil {
+		cli.Context = ctx
+		cli.Client = rc.Client
 	}
-	return inCluster
+
+	return
 }

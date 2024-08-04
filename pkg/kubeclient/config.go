@@ -15,22 +15,21 @@ const (
 	Subject = "subject"
 )
 
-// KubeClient new kube client
-func KubeClient(scheme *runtime.Scheme, cfg *RestConfig) (k8sClient client.Client, err error) {
+// NewKubeClient new kube client
+func NewKubeClient(scheme *runtime.Scheme, cfg *RestConfig) (k8sClient client.Client, err error) {
 	log.Info("Creating kube client")
 	k8sClient, err = client.New(cfg.Config, client.Options{Scheme: scheme})
 	log.Infof("created kube client: %v", k8sClient)
 	return
 }
 
-// RuntimeKubeClient new runtime kube client
-func RuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bool, properties *Properties, cluster *kubeconfig.RuntimeClusterConfig) (cli client.Client, err error) {
+// NewRuntimeKubeClient new runtime kube client
+func NewRuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bool, properties *Properties, cluster *kubeconfig.ClusterConfig) (cli client.Client, err error) {
 	var cfg *rest.Config
 	rcc := &kubeconfig.ClusterConfig{
 		ClusterInfo: kubeconfig.ClusterInfo{
-			Name:      cluster.Name,
-			Config:    cluster.Config,
-			InCluster: cluster.InCluster,
+			Name:   cluster.Name,
+			Config: cluster.Config,
 		},
 	}
 	cfg, err = kubeconfig.Kubeconfig(&rcc.ClusterInfo)
