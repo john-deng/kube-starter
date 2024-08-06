@@ -20,7 +20,7 @@ const (
 )
 
 type Manager struct {
-	//at.Scope `value:"prototype"`
+	at.Scope `value:"prototype"`
 
 	manager.Manager
 }
@@ -40,6 +40,7 @@ func init() {
 }
 
 // Manager is the controller runtime manager
+// TODO: use method annotation instead?
 func (c *configuration) Manager(scheme *runtime.Scheme, cfg *kubeclient.RestConfig) (mgr *Manager, err error) {
 	opts := zap.Options{
 		Development: c.Properties.Development,
@@ -65,6 +66,9 @@ func (c *configuration) Manager(scheme *runtime.Scheme, cfg *kubeclient.RestConf
 		second := *c.Properties.SyncPeriod * time.Second
 		options.SyncPeriod = &second
 	}
+	options.MetricsBindAddress = c.Properties.MetricsBindAddress
+	options.LeaderElection = c.Properties.LeaderElection
+	options.Port = c.Properties.Port
 
 	log.Infof("started operator with qps: %v, burst: %v", cfg.QPS, cfg.Burst)
 	mgr = new(Manager)

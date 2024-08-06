@@ -1,9 +1,14 @@
 
 kubeclient:
+  namespace: kube-system
   qps: 500
   burst: 1000
-  cluster:
-    name: default
-    # config is the content of kubeconfig in base64
-    #  if config is empty, use kubeconfig in $HOME/.kube/config in-cluster config
-    config: ""
+  clusters:
+    main:
+      name: main
+      # config is the content of kubeconfig in base64
+      #  if config is empty, use kubeconfig in $HOME/.kube/config in-cluster config
+      config: ""
+    ai-dev:
+      name: ai-dev
+      config: ""

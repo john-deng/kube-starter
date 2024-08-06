@@ -86,11 +86,11 @@ func init() {
 }
 
 func (c *configuration) ClusterConfig(prop *Properties) (cluster *kubeconfig.ClusterConfig, err error) {
-
+	clusterConfig := prop.Clusters["main"]
 	cluster = &kubeconfig.ClusterConfig{
 		ClusterInfo: kubeconfig.ClusterInfo{
-			Name:   prop.Cluster.Name,
-			Config: prop.Cluster.Config, // if config is empty, will use the default $HOME/.kube/config
+			Name:   clusterConfig.Name,
+			Config: clusterConfig.Config, // if config is empty, will use the default $HOME/.kube/config
 		},
 	}
 	log.Infof("ClusterConfig: %+v", cluster)

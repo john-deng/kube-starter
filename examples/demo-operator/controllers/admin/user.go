@@ -2,6 +2,8 @@ package admin
 
 import (
 	"context"
+	"github.com/hidevopsio/hiboot/pkg/at"
+	"github.com/hidevopsio/kube-starter/pkg/kube"
 	"github.com/hidevopsio/kube-starter/pkg/operator"
 	"os"
 
@@ -15,6 +17,8 @@ import (
 
 // UserReconciler reconciles a User object
 type UserReconciler struct {
+	kube.Controller
+	at.Scope `value:"prototype"`
 	client.Client
 	log    logr.Logger
 	Scheme *runtime.Scheme

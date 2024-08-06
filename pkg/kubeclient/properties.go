@@ -11,6 +11,9 @@ type Properties struct {
 	at.ConfigurationProperties `value:"kubeclient"`
 	at.AutoWired
 
+	// operator deployment namespace
+	Namespace string `json:"namespace" default:"kube-system"`
+
 	// use DefaultInCluster as default
 	DefaultInCluster *bool `json:"defaultInCluster"`
 
@@ -27,5 +30,5 @@ type Properties struct {
 	Timeout time.Duration `json:"timeout"`
 
 	// the default kube config in base64
-	Cluster kubeconfig.ClusterInfo `json:"cluster"`
+	Clusters map[string]kubeconfig.ClusterInfo `json:"clusters"`
 }
