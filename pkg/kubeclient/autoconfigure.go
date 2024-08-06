@@ -101,6 +101,10 @@ func (c *configuration) RestConfig(cluster *kubeconfig.ClusterConfig) (restConfi
 	restConfig = new(RestConfig)
 
 	restConfig.Config, err = kubeconfig.Kubeconfig(&cluster.ClusterInfo)
+	if err != nil {
+		log.Error(err)
+		return
+	}
 	restConfig.Config.QPS = c.Properties.QPS
 	restConfig.Config.Burst = c.Properties.Burst
 	restConfig.Config.Timeout = c.Properties.Timeout
@@ -156,12 +160,12 @@ func (c *configuration) RuntimeClientCreation(
 func (c *configuration) RuntimeClient(
 	ctx context.Context,
 	token *oidc.Token,
-	cluster *kubeconfig.ClusterConfig,
 	runtimeClientFactory *instantiate.ScopedInstanceFactory[*RuntimeClientCreation],
 ) (cli *RuntimeClient, err error) {
 
 	cli = new(RuntimeClient)
-	cluster.Username = token.Claims.Username
+
+	cluster := DefaultClusterConfig(ctx.GetHeader("cluster"), token, c.Properties)
 	var rc *RuntimeClientCreation
 	rc, err = runtimeClientFactory.GetInstance(ctx, cluster)
 	if err == nil {

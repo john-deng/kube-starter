@@ -72,3 +72,18 @@ func NewRuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bo
 	log.Infof("created runtime client with qps: %v, burst: %v", cfg.QPS, cfg.Burst)
 	return
 }
+
+func DefaultClusterConfig(clusterName string, token *oidc.Token, prop *Properties) (clusterConfig *kubeconfig.ClusterConfig) {
+	clusterConfig = new(kubeconfig.ClusterConfig)
+	//if prop.DefaultClusterSelector {
+	if clusterName == "" {
+		clusterName = "main"
+	}
+
+	clusterConfig.Config = prop.Clusters[clusterName].Config
+	clusterConfig.Name = clusterName
+
+	clusterConfig.Username = token.Claims.Username
+	//}
+	return
+}

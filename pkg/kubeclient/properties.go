@@ -15,6 +15,7 @@ type Properties struct {
 	Namespace string `json:"namespace" default:"kube-system"`
 
 	// use DefaultInCluster as default
+	// Deprecated
 	DefaultInCluster *bool `json:"defaultInCluster"`
 
 	//OIDC Scope Impersonate
@@ -28,6 +29,9 @@ type Properties struct {
 
 	// The maximum length of time to wait before giving up on a server request. A value of zero means no timeout.
 	Timeout time.Duration `json:"timeout"`
+
+	// Use default cluster selector
+	DefaultClusterSelector bool `json:"defaultClusterSelector"`
 
 	// the default kube config in base64
 	Clusters map[string]kubeconfig.ClusterInfo `json:"clusters"`
