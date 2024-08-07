@@ -8,6 +8,7 @@ import (
 	examplev1 "github.com/hidevopsio/kube-starter/examples/hiboot-operator/api/v1" // Ensure this import path is correct
 	_ "github.com/hidevopsio/kube-starter/examples/hiboot-operator/controllers"    // Ensure this import path is correct
 	"github.com/hidevopsio/kube-starter/pkg/kubeclient"
+	"github.com/hidevopsio/kube-starter/pkg/oidc"
 	"github.com/hidevopsio/kube-starter/pkg/operator"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -29,6 +30,7 @@ func main() {
 			logging.Profile,
 			operator.Profile,
 			kubeclient.Profile,
+			oidc.Profile,
 		).
 		Run()
 }
