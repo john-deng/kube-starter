@@ -90,7 +90,7 @@ func (r *MyAppReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&examplev1.MyApp{}).
 		Owns(&appsv1.Deployment{}).
-		Complete(r)
+		Complete(r) // append runnable to cm.caches
 }
 
 // add newMyAppReconciler and init func for the controller of Hiboot Operator

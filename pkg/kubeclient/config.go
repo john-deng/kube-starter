@@ -73,9 +73,9 @@ func NewRuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bo
 	return
 }
 
-func DefaultClusterConfig(clusterName string, token *oidc.Token, prop *Properties) (clusterConfig *kubeconfig.ClusterConfig) {
+func GetClusterConfig(clusterName string, token *oidc.Token, prop *Properties) (clusterConfig *kubeconfig.ClusterConfig) {
 	clusterConfig = new(kubeconfig.ClusterConfig)
-	//if prop.DefaultClusterSelector {
+
 	if clusterName == "" {
 		clusterName = "main"
 	}
@@ -84,6 +84,6 @@ func DefaultClusterConfig(clusterName string, token *oidc.Token, prop *Propertie
 	clusterConfig.Name = clusterName
 
 	clusterConfig.Username = token.Claims.Username
-	//}
+
 	return
 }

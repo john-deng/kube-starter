@@ -81,11 +81,11 @@ type Properties struct {
 	// MetricsBindAddress is the TCP address that the controller should bind to
 	// for serving prometheus metrics.
 	// It can be set to "0" to disable the metrics serving.
-	MetricsBindAddress string `json:"metricsBindAddress" default:":8082"`
+	MetricsBindAddress string `json:"metricsBindAddress" default:":9000"`
 
 	// HealthProbeBindAddress is the TCP address that the controller should bind to
 	// for serving health probes
-	HealthProbeBindAddress string `json:"healthProbeBindAddress" default:":8081"`
+	HealthProbeBindAddress string `json:"healthProbeBindAddress" default:":9100"`
 
 	// Readiness probe endpoint name, defaults to "readyz"
 	ReadinessEndpointName string `json:"readinessEndpointName"`
@@ -95,7 +95,7 @@ type Properties struct {
 
 	// Port is the port that the webhook server serves at.
 	// It is used to set webhook.Server.Port.
-	Port int `json:"port" default:"9443"`
+	Port int `json:"port" default:"8000"`
 	// Host is the hostname that the webhook server binds to.
 	// It is used to set webhook.Server.Host.
 	Host string `json:"host"`

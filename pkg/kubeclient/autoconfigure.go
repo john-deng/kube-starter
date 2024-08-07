@@ -165,7 +165,7 @@ func (c *configuration) RuntimeClient(
 
 	cli = new(RuntimeClient)
 
-	cluster := DefaultClusterConfig(ctx.GetHeader("cluster"), token, c.Properties)
+	cluster := GetClusterConfig(ctx.GetHeader("cluster"), token, c.Properties)
 	var rc *RuntimeClientCreation
 	rc, err = runtimeClientFactory.GetInstance(ctx, cluster)
 	if err == nil {

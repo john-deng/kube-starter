@@ -1,7 +1,9 @@
 package operator
 
 import (
+	"fmt"
 	"github.com/hidevopsio/kube-starter/pkg/kubeclient"
+	"strconv"
 	"time"
 
 	"github.com/hidevopsio/hiboot/pkg/app"
@@ -29,6 +31,7 @@ type configuration struct {
 	at.AutoConfiguration
 
 	Properties *Properties
+	portOffset int
 }
 
 func newConfiguration() *configuration {
@@ -66,9 +69,14 @@ func (c *configuration) Manager(scheme *runtime.Scheme, cfg *kubeclient.RestConf
 		second := *c.Properties.SyncPeriod * time.Second
 		options.SyncPeriod = &second
 	}
-	options.MetricsBindAddress = c.Properties.MetricsBindAddress
+	var port string
+	port, err = addOffsetToPort(c.Properties.MetricsBindAddress, c.portOffset)
+	options.MetricsBindAddress = port
+	port, err = addOffsetToPort(c.Properties.HealthProbeBindAddress, c.portOffset)
+	options.HealthProbeBindAddress = port
 	options.LeaderElection = c.Properties.LeaderElection
-	options.Port = c.Properties.Port
+	options.Port = c.Properties.Port + c.portOffset
+	c.portOffset = c.portOffset + 1
 
 	log.Infof("started operator with qps: %v, burst: %v", cfg.QPS, cfg.Burst)
 	mgr = new(Manager)
@@ -78,4 +86,22 @@ func (c *configuration) Manager(scheme *runtime.Scheme, cfg *kubeclient.RestConf
 		log.Error(err)
 	}
 	return
+}
+
+// addOffsetToPort takes a port string (with leading colon) and an offset integer,
+// and returns a new port string with the offset applied.
+func addOffsetToPort(port string, offset int) (string, error) {
+	// Strip the leading colon and convert the port number to an integer
+	portNumber, err := strconv.Atoi(port[1:])
+	if err != nil {
+		return "", fmt.Errorf("error converting port: %v", err)
+	}
+
+	// Add the offset to the port number
+	newPortNumber := portNumber + offset
+
+	// Convert the new port number back to a string and add the leading colon
+	newPort := ":" + strconv.Itoa(newPortNumber)
+
+	return newPort, nil
 }
