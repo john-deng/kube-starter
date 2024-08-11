@@ -27,9 +27,9 @@ func init() {
 	app.Register(newConfiguration)
 }
 
-// Token
+// Token is the token object
 type Token struct {
-	at.ContextAware
+	at.Scope `value:"request"`
 
 	Context context.Context `json:"context"`
 	Data    string          `json:"data"`
@@ -54,7 +54,7 @@ func (c *configuration) Token(ctx context.Context) (token *Token, err error) {
 		pe := err
 		err = errors.NewUnauthorized("Unauthorized")
 		log.Errorf("%v -> %v", pe, err)
-		return  // fixes the nil pointer issue
+		return // fixes the nil pointer issue
 	}
 	if token.Claims.Expiry.Before(time.Now()) {
 		err = errors.NewUnauthorized("Expired")

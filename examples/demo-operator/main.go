@@ -25,6 +25,7 @@ package main
 import (
 	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/app/web"
+	"github.com/hidevopsio/hiboot/pkg/at"
 	"github.com/hidevopsio/hiboot/pkg/starter/actuator"
 	"github.com/hidevopsio/hiboot/pkg/starter/logging"
 	"github.com/hidevopsio/kube-starter/pkg/kubeclient"
@@ -50,14 +51,18 @@ func init() {
 	utilruntime.Must(adminv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 
-
 	app.Register(scheme)
+}
+
+type bootstrap struct {
+	at.AfterInit
 }
 
 func main() {
 	web.NewApplication().
 		SetProperty(logging.Level, logging.LevelDebug).
 		SetProperty(app.ProfilesInclude,
+			web.Profile,
 			actuator.Profile,
 			logging.Profile,
 			operator.Profile,
