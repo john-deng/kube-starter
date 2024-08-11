@@ -3,6 +3,7 @@ package operator
 import (
 	"fmt"
 	"github.com/hidevopsio/kube-starter/pkg/kubeclient"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"strconv"
 	"time"
 
@@ -43,7 +44,6 @@ func init() {
 }
 
 // Manager is the controller runtime manager
-// TODO: use method annotation instead?
 func (c *configuration) Manager(scheme *runtime.Scheme, cfg *kubeclient.RestConfig) (mgr *Manager, err error) {
 	opts := zap.Options{
 		Development: c.Properties.Development,
@@ -65,17 +65,17 @@ func (c *configuration) Manager(scheme *runtime.Scheme, cfg *kubeclient.RestConf
 		second := *c.Properties.RetryPeriod * time.Second
 		options.RetryPeriod = &second
 	}
-	if c.Properties.SyncPeriod != nil {
-		second := *c.Properties.SyncPeriod * time.Second
-		options.SyncPeriod = &second
-	}
+
 	var port string
 	port, err = addOffsetToPort(c.Properties.MetricsBindAddress, c.portOffset)
-	options.MetricsBindAddress = port
+	options.Metrics.BindAddress = port
 	port, err = addOffsetToPort(c.Properties.HealthProbeBindAddress, c.portOffset)
 	options.HealthProbeBindAddress = port
 	options.LeaderElection = c.Properties.LeaderElection
-	options.Port = c.Properties.Port + c.portOffset
+	options.WebhookServer = webhook.NewServer(webhook.Options{
+		Port: c.Properties.Port + c.portOffset, // Specify your desired port
+	})
+
 	c.portOffset = c.portOffset + 1
 
 	log.Infof("started operator with qps: %v, burst: %v", cfg.QPS, cfg.Burst)
@@ -83,7 +83,7 @@ func (c *configuration) Manager(scheme *runtime.Scheme, cfg *kubeclient.RestConf
 	mgr.Manager, err = ctrl.NewManager(cfg.Config, options)
 
 	if err != nil {
-		log.Error(err)
+		log.Errorf("ctrl.NewManager() returned error: %v", err)
 	}
 	return
 }

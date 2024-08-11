@@ -51,7 +51,7 @@ func newBootstrap(
 			ClusterInfo: cluster,
 		})
 		if err != nil {
-			log.Errorf("unable to get instance container: %v", err)
+			log.Errorf("unable to get instance container for manager: %v", err)
 			os.Exit(1)
 		}
 		// new manager
