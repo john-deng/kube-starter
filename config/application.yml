@@ -1,10 +1,14 @@
 
+app:
+  name: kube-starter
+
 kubeclient:
   namespace: kube-system
   qps: 500
   burst: 1000
   # select cluster from application config file as below
   defaultClusterSelector: true
+  oidcScope: profile
   clusters:
     main:
       name: main

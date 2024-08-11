@@ -2,11 +2,9 @@ package kubeclient
 
 import (
 	"errors"
-	"fmt"
 	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/at"
-	"github.com/hidevopsio/hiboot/pkg/log"
 )
 
 var (
@@ -30,16 +28,16 @@ func init() {
 func (m *middleware) CheckKubeClient(_ struct {
 	at.MiddlewareHandler `value:"/" `
 },
-	cli *Client,
+	//cli *Client,
 	ctx context.Context) (err error) {
 
-	if cli.Client == nil {
-		err = fmt.Errorf("[middleware] kube client is nil")
-		log.Warn(err)
-		ctx.StatusCode(500)
-		ctx.ResponseBody(err.Error(), nil)
-		return
-	}
+	//if cli.Client == nil {
+	//	err = fmt.Errorf("[middleware] kube client is nil")
+	//	log.Warn(err)
+	//	ctx.StatusCode(500)
+	//	ctx.ResponseBody(err.Error(), nil)
+	//	return
+	//}
 	// call ctx.Next() if you want to continue, otherwise do not call it
 	ctx.Next()
 	return

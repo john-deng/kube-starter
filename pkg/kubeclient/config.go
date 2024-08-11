@@ -7,7 +7,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -42,22 +41,17 @@ func NewRuntimeKubeClient(scheme *runtime.Scheme, token *oidc.Token, useToken bo
 	cfg.Timeout = properties.Timeout
 
 	if token != nil && token.Claims != nil && token.Data != "" {
-		kubeServiceHost := os.Getenv("KUBERNETES_SERVICE_HOST")
-		if kubeServiceHost == "" && useToken {
-			cfg.BearerToken = token.Data
-			cfg.BearerTokenFile = ""
-		} else {
-			switch properties.OIDCScope {
-			case "email":
-				cfg.Impersonate.UserName = token.Claims.Email
-			case "profile":
-				cfg.Impersonate.UserName = token.Claims.Username
-			case "openid":
-				cfg.Impersonate.UserName = token.Claims.Issuer + "#" + token.Claims.Subject
-			default:
-				cfg.Impersonate.UserName = token.Claims.Email
-			}
+		switch properties.OIDCScope {
+		case "email":
+			cfg.Impersonate.UserName = token.Claims.Email
+		case "profile":
+			cfg.Impersonate.UserName = token.Claims.Username
+		case "openid":
+			cfg.Impersonate.UserName = token.Claims.Issuer + "#" + token.Claims.Subject
+		default:
+			cfg.Impersonate.UserName = token.Claims.Email
 		}
+
 	} else {
 		log.Warn("Unauthorized")
 		err = errors.NewUnauthorized("Unauthorized")

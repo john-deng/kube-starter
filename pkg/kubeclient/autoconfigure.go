@@ -93,7 +93,7 @@ func (c *configuration) ClusterConfig(prop *Properties) (cluster *kubeconfig.Clu
 			Config: clusterConfig.Config, // if config is empty, will use the default $HOME/.kube/config
 		},
 	}
-	log.Infof("ClusterConfig: %+v", cluster)
+	log.Infof("ClusterConfig: %v", cluster.Name)
 	return
 }
 

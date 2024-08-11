@@ -5,7 +5,7 @@ go 1.22.6
 require (
 	github.com/go-logr/logr v1.4.1
 	github.com/google/go-cmp v0.6.0
-	github.com/hidevopsio/hiboot v1.7.1-0.20240811143318-eeee06a30be2
+	github.com/hidevopsio/hiboot v1.8.0
 	github.com/jinzhu/copier v0.2.8
 	k8s.io/api v0.30.3
 	k8s.io/apimachinery v0.30.3
