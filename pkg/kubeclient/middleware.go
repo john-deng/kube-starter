@@ -12,6 +12,7 @@ import (
 
 type middleware struct {
 	at.Middleware
+	at.UseMiddleware
 }
 
 func newMiddleware() *middleware {
