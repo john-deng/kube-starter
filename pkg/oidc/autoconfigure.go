@@ -52,7 +52,7 @@ func (c *configuration) Token(ctx context.Context) (token *Token, err error) {
 	token.Claims, err = DecodeWithoutVerify(token.Data)
 	if err != nil {
 		pe := err
-		err = errors.NewUnauthorized("Unauthorized")
+		err = errors.NewUnauthorized(err.Error())
 		log.Errorf("%v -> %v", pe, err)
 		return // fixes the nil pointer issue
 	}
