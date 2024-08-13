@@ -96,6 +96,11 @@ func (c *configuration) ClusterConfig(prop *Properties) (cluster *kubeconfig.Clu
 	return
 }
 
+func (c *configuration) Scheme() (cluster *runtime.Scheme, err error) {
+	cluster = runtime.NewScheme()
+	return
+}
+
 func (c *configuration) RestConfig(cluster *kubeconfig.ClusterConfig) (restConfig *RestConfig, err error) {
 	restConfig = new(RestConfig)
 
