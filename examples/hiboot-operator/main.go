@@ -16,10 +16,12 @@ import (
 )
 
 func init() {
-	scheme := runtime.NewScheme()
+	app.Register(addToScheme)
+}
+
+func addToScheme(scheme *runtime.Scheme) {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(examplev1.AddToScheme(scheme))
-	app.Register(scheme)
 }
 
 func main() {

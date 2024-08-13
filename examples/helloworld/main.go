@@ -180,13 +180,14 @@ func (c *Controller) ListDeployment(_ struct {
 	return
 }
 
+func addToScheme(scheme *runtime.Scheme) {
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+}
+
 // main function
 func main() {
-	scheme := runtime.NewScheme()
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-
 	app.Register(
-		scheme,
+		addToScheme,
 		newController,
 		swagger.ApiInfoBuilder().
 			Title("HiBoot Example - Hello world").
