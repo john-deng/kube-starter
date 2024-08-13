@@ -9,7 +9,6 @@ import (
 // Properties the operator properties
 type Properties struct {
 	at.ConfigurationProperties `value:"operator"`
-	at.AutoWired
 
 	Development bool `json:"development"`
 

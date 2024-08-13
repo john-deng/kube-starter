@@ -31,12 +31,12 @@ type Manager struct {
 type configuration struct {
 	at.AutoConfiguration
 
-	Properties *Properties
+	prop       *Properties
 	portOffset int
 }
 
-func newConfiguration() *configuration {
-	return &configuration{}
+func newConfiguration(prop *Properties) *configuration {
+	return &configuration{prop: prop}
 }
 
 func init() {
@@ -46,34 +46,34 @@ func init() {
 // Manager is the controller runtime manager
 func (c *configuration) Manager(scheme *runtime.Scheme, cfg *kubeclient.RestConfig) (mgr *Manager, err error) {
 	opts := zap.Options{
-		Development: c.Properties.Development,
+		Development: c.prop.Development,
 	}
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	var options ctrl.Options
-	_ = copier.CopyWithOption(&options, &c.Properties, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+	_ = copier.CopyWithOption(&options, &c.prop, copier.Option{IgnoreEmpty: true, DeepCopy: true})
 	options.Scheme = scheme
-	if c.Properties.LeaseDuration != nil {
-		second := *c.Properties.LeaseDuration * time.Second
+	if c.prop.LeaseDuration != nil {
+		second := *c.prop.LeaseDuration * time.Second
 		options.LeaseDuration = &second
 	}
-	if c.Properties.RenewDeadline != nil {
-		second := *c.Properties.RenewDeadline * time.Second
+	if c.prop.RenewDeadline != nil {
+		second := *c.prop.RenewDeadline * time.Second
 		options.RenewDeadline = &second
 	}
-	if c.Properties.RetryPeriod != nil {
-		second := *c.Properties.RetryPeriod * time.Second
+	if c.prop.RetryPeriod != nil {
+		second := *c.prop.RetryPeriod * time.Second
 		options.RetryPeriod = &second
 	}
 
 	var port string
-	port, err = addOffsetToPort(c.Properties.MetricsBindAddress, c.portOffset)
+	port, err = addOffsetToPort(c.prop.MetricsBindAddress, c.portOffset)
 	options.Metrics.BindAddress = port
-	port, err = addOffsetToPort(c.Properties.HealthProbeBindAddress, c.portOffset)
+	port, err = addOffsetToPort(c.prop.HealthProbeBindAddress, c.portOffset)
 	options.HealthProbeBindAddress = port
-	options.LeaderElection = c.Properties.LeaderElection
+	options.LeaderElection = c.prop.LeaderElection
 	options.WebhookServer = webhook.NewServer(webhook.Options{
-		Port: c.Properties.Port + c.portOffset, // Specify your desired port
+		Port: c.prop.Port + c.portOffset, // Specify your desired port
 	})
 
 	c.portOffset = c.portOffset + 1

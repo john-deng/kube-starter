@@ -9,7 +9,6 @@ import (
 // Properties the operator properties
 type Properties struct {
 	at.ConfigurationProperties `value:"kubeclient"`
-	at.AutoWired
 
 	// operator deployment namespace
 	Namespace string `json:"namespace" default:"kube-system"`

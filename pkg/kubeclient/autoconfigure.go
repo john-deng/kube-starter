@@ -65,15 +65,14 @@ type RuntimeClientCreation struct {
 type configuration struct {
 	at.AutoConfiguration
 
-	Properties *Properties
+	prop *Properties
 
 	clientFactory        *instantiate.ScopedInstanceFactory[*ClientCreation]
 	runtimeClientFactory *instantiate.ScopedInstanceFactory[*RuntimeClientCreation]
 }
 
 func newConfiguration(prop *Properties) *configuration {
-
-	return &configuration{Properties: prop}
+	return &configuration{prop: prop}
 }
 
 func init() {
@@ -105,9 +104,9 @@ func (c *configuration) RestConfig(cluster *kubeconfig.ClusterConfig) (restConfi
 		log.Error(err)
 		return
 	}
-	restConfig.Config.QPS = c.Properties.QPS
-	restConfig.Config.Burst = c.Properties.Burst
-	restConfig.Config.Timeout = c.Properties.Timeout
+	restConfig.Config.QPS = c.prop.QPS
+	restConfig.Config.Burst = c.prop.Burst
+	restConfig.Config.Timeout = c.prop.Timeout
 	return
 }
 
@@ -143,7 +142,7 @@ func (c *configuration) RuntimeClientCreation(
 	cli = new(RuntimeClientCreation)
 	var newClient client.Client
 
-	newClient, err = NewRuntimeKubeClient(scheme, token, true, c.Properties, cluster)
+	newClient, err = NewRuntimeKubeClient(scheme, token, true, c.prop, cluster)
 	if err != nil {
 		log.Error(err)
 		return
@@ -165,7 +164,7 @@ func (c *configuration) RuntimeClient(
 
 	cli = new(RuntimeClient)
 
-	cluster := GetClusterConfig(ctx.GetHeader("cluster"), token, c.Properties)
+	cluster := GetClusterConfig(ctx.GetHeader("cluster"), token, c.prop)
 	var rc *RuntimeClientCreation
 	rc, err = runtimeClientFactory.GetInstance(ctx, cluster)
 	if err == nil {
