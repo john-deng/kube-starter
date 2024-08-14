@@ -31,9 +31,6 @@ import (
 	"github.com/hidevopsio/kube-starter/pkg/kubeclient"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -180,14 +177,9 @@ func (c *Controller) ListDeployment(_ struct {
 	return
 }
 
-func addToScheme(scheme *runtime.Scheme) {
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-}
-
 // main function
 func main() {
 	app.Register(
-		addToScheme,
 		newController,
 		swagger.ApiInfoBuilder().
 			Title("HiBoot Example - Hello world").

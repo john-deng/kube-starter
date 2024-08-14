@@ -12,7 +12,6 @@ import (
 	"github.com/hidevopsio/kube-starter/pkg/operator"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 )
 
 func init() {
@@ -20,7 +19,6 @@ func init() {
 }
 
 func addToScheme(scheme *runtime.Scheme) {
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(examplev1.AddToScheme(scheme))
 }
 

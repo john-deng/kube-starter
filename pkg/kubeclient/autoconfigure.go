@@ -16,6 +16,8 @@ import (
 	"github.com/hidevopsio/kube-starter/pkg/kubeconfig"
 	"github.com/hidevopsio/kube-starter/pkg/oidc"
 	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -96,8 +98,9 @@ func (c *configuration) ClusterConfig(prop *Properties) (cluster *kubeconfig.Clu
 	return
 }
 
-func (c *configuration) Scheme() (cluster *runtime.Scheme, err error) {
-	cluster = runtime.NewScheme()
+func (c *configuration) Scheme() (scheme *runtime.Scheme, err error) {
+	scheme = runtime.NewScheme()
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	return
 }
 
