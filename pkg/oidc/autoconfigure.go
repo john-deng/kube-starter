@@ -1,14 +1,13 @@
 package oidc
 
 import (
-	"strings"
-	"time"
-
 	"github.com/hidevopsio/hiboot/pkg/app"
 	"github.com/hidevopsio/hiboot/pkg/app/web/context"
 	"github.com/hidevopsio/hiboot/pkg/at"
 	"github.com/hidevopsio/hiboot/pkg/log"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"strings"
+	"time"
 )
 
 const (
@@ -60,5 +59,8 @@ func (c *configuration) Token(ctx context.Context) (token *Token, err error) {
 		err = errors.NewUnauthorized("Expired")
 		log.Errorf("%v", err)
 	}
+
+	err = verifyOIDCToken(token.Claims.Issuer, token.Data)
+
 	return
 }
