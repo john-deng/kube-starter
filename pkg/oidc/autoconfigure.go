@@ -16,14 +16,16 @@ const (
 
 type configuration struct {
 	at.AutoConfiguration
+
+	prop *Properties
 }
 
-func newConfiguration() *configuration {
-	return &configuration{}
+func newConfiguration(prop *Properties) *configuration {
+	return &configuration{prop: prop}
 }
 
 func init() {
-	app.Register(newConfiguration)
+	app.Register(newConfiguration, new(Properties))
 }
 
 // Token is the token object
@@ -35,8 +37,12 @@ type Token struct {
 	Claims  *Claims         `json:"claims"`
 }
 
+func (c *configuration) IDTokenVerifier() (verifier *IDTokenVerifier, err error) {
+	return newOIDCTokenVerifier(c.prop)
+}
+
 // Token instantiate bearer token to object
-func (c *configuration) Token(ctx context.Context) (token *Token, err error) {
+func (c *configuration) Token(ctx context.Context, verifier *IDTokenVerifier) (token *Token, err error) {
 	token = new(Token)
 	if ctx == nil {
 		err = errors.NewBadRequest("unknown context")
@@ -58,9 +64,14 @@ func (c *configuration) Token(ctx context.Context) (token *Token, err error) {
 	if token.Claims.Expiry.Before(time.Now()) {
 		err = errors.NewUnauthorized("Expired")
 		log.Errorf("%v", err)
+		return
 	}
-
-	err = verifyOIDCToken(token.Claims.Issuer, token.Data)
+	if c.prop.Verify {
+		err = verifyOIDCToken(verifier, token.Data)
+		if err != nil {
+			err = errors.NewUnauthorized(err.Error())
+		}
+	}
 
 	return
 }

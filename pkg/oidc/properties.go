@@ -7,4 +7,7 @@ import (
 // Properties the operator properties
 type Properties struct {
 	at.ConfigurationProperties `value:"oidc"`
+
+	Verify     bool     `json:"verify"`
+	PublicKeys []string `json:"publicKeys"`
 }

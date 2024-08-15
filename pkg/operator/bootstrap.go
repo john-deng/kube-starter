@@ -74,7 +74,7 @@ func newBootstrap(
 			log.Info("starting operator manager")
 			err = manager.Manager.Start(ctx)
 			if err != nil {
-				log.Error("problem running manager: %v", err)
+				log.Errorf("problem running manager: %v", err)
 				os.Exit(1)
 			}
 		}()

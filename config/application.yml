@@ -3,36 +3,9 @@ app:
   name: kube-starter
 
 oidc:
-  publicKey: |
-    -----BEGIN CERTIFICATE-----
-    MIIE9TCCAt2gAwIBAgIDAeJAMA0GCSqGSIb3DQEBCwUAMDMxHTAbBgNVBAoTFGJ1
-    aWx0LWluLWF1dG8tY3JlYXRlMRIwEAYDVQQDEwlnYmEtbmN0aWgwIBcNMjQwODA3
-    MDYwNzQ4WhgPMjA3NDA4MDcwNjA3NDhaMDMxHTAbBgNVBAoTFGJ1aWx0LWluLWF1
-    dG8tY3JlYXRlMRIwEAYDVQQDEwlnYmEtbmN0aWgwggIiMA0GCSqGSIb3DQEBAQUA
-    A4ICDwAwggIKAoICAQC3sEaHCpVbE467xDm0FBpuBAcd+XrTuHx3mXrSw5/4YOyt
-    XXtlWE+IfxNbsCte/D3TDpRGhbmSMwH/0+3NagSRrHe5KnNaTp2b6iOU1IiJ0Y5E
-    bAneQCWEmpEmKNU2//5LNHyInw8TubHMOUzrIPxD1zFVFIzmRdrT6Y3rIkY+oiz4
-    hovcA7M/k4zfTOD4r5o74vqst7KaNBxNBVQNJ61xnOsNl0DRkSnR4ExTKNnSmxhw
-    44m7Cq2jdUo9Kv+OPcdCJ0LdOfh/dkGO7HNisoE+qIw4MZX+Fh7MM365k0SmZLqd
-    QVaudv5VIKBwiqJke6z/oTXMUsaNLAVW+TG6QZdVIgS9pD3koQ5fSIK2VGYqb4TM
-    rg4NS0dcisMvG8rvXuuUohagg6sM0bN94ryHhB5hr3rFUOL7PssvqxeEeJ28E84m
-    KXOWQY4kHT+8F4eYrCPQ8dG2X8/N/MariDMqPnd17TmvzYzWbiqONuWJ0yFRWezg
-    XDgT1RfNSwWfeMDY7EaxqUh3NDo6HCqhS/6vjqx1QIwl6wxmkls8QabjvkV31i3N
-    iTcEbZEogj8WsvKgtGtIZrSF7CA6DPDITFO7oaj/tLEvvUJMiCjiX1+sR1mZGdQ5
-    +tFyiismkyLgO0vvw+cqiEZloski9XUXK5r21WYEBzitfuJmO5eGLR1ULz7GkwID
-    AQABoxAwDjAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBCwUAA4ICAQA8zDEwSbCe
-    fkBBXEanCt8VFioTbjPqeC/a3z7sJXz5StbW3rd7t19FzyLASoGfM2thk7yscjvG
-    YPLCAlW3oEY/kZughh7ykAL8mxhx+CCzcb+Dmh7G667O1dEUtmgqQASwMhw6jM88
-    YPlF49mu0xs+zf3WLBo8fzXqKBxUZOFVSEmpfZGkHUdcBS9qhCr9M2sK+PEfyjeO
-    shvQQpkAnMiOs6rzB+WNvxTPcPsKIJESgjtllrmDc+InzsCc6LZip2e/nlsHjMxx
-    aomp82FxUMkt2FES4c6Dup7HXdd5joGF2dakHNml5DS1+sxOSEnFVbpix5aiYIFx
-    fy0a1ANbAUaW+wtxIbxOovt0f067fIr78Udc9TOKQAAyK1gV2p7MmlZO6cxPfUf9
-    q5Rr3ZA5uxfWvUDCBiTd9UgPjjuRnrLx3RlG+KtO8FkImnwTjMrYVTGliDe6945C
-    psdacx3IeWwda4abzy3G69daNc/9bv5B7MPa4TBicY/KqJbChUbNbog+XC34mAKy
-    W08IzCsAro4JZxAYa81aTZhuhL8xBLW07nrBqzfzxFsyFJczG8UCc+QIwZ2vkjiF
-    Jkd+aD/u0gOYLA33Ik5N/hOVUr7Sik8VHgv6mnrOXPViX03H2jO9x5GwKbOLumHg
-    W27At3HO0ManS9cnWV67CuJUv/hG78iEkA==
-    -----END CERTIFICATE-----
+  verify: true
+  publicKeys:
+    - "replace-with-your-public-key"
 
 kubeclient:
   namespace: kube-system
