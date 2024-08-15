@@ -2,6 +2,11 @@
 app:
   name: kube-starter
 
+oidc:
+  verify: true
+  publicKeys:
+    - "replace-with-your-public-key"
+
 kubeclient:
   namespace: kube-system
   qps: 500

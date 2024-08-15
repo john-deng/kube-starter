@@ -1,15 +1,59 @@
-// Package jwt provides JWT manipulations.
+// Package oidc provides JWT token manipulations.
 // See https://tools.ietf.org/html/rfc7519#section-4.1.3
 package oidc
 
 import (
 	"bytes"
+	"context"
+	"crypto"
+	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/golang-jwt/jwt"
+	"github.com/hidevopsio/hiboot/pkg/log"
 	"strings"
 	"time"
 )
+
+type IDTokenVerifier struct {
+	Verifiers []*oidc.IDTokenVerifier
+}
+
+// getOIDCTokenVerifier verifies an OIDC token using the issuer's JWK set
+func newOIDCTokenVerifier(properties *Properties) (verifier *IDTokenVerifier, err error) {
+	// Validate the token using OIDC
+	verifier = new(IDTokenVerifier)
+	for _, publicKey := range properties.PublicKeys {
+		var verifyKey *rsa.PublicKey
+		var pk []byte
+		pk, err = base64.URLEncoding.WithPadding(base64.StdPadding).DecodeString(publicKey)
+		if verifyKey, err = jwt.ParseRSAPublicKeyFromPEM(pk); err == nil {
+			keySet := &oidc.StaticKeySet{PublicKeys: []crypto.PublicKey{verifyKey}}
+			v := oidc.NewVerifier("", keySet, &oidc.Config{
+				SkipClientIDCheck: true,
+				SkipIssuerCheck:   true,
+			})
+			verifier.Verifiers = append(verifier.Verifiers, v)
+		}
+	}
+	return
+}
+
+// verifyOIDCToken verifies an OIDC token using the issuer's JWK set
+func verifyOIDCToken(verifier *IDTokenVerifier, tokenString string) (err error) {
+	for _, v := range verifier.Verifiers {
+		_, err = v.Verify(context.Background(), tokenString)
+		if err == nil {
+			log.Infof("OIDC Token verification succeeded!")
+			return
+		}
+	}
+
+	log.Errorf("OIDC Token verification failed: %v", err)
+	return
+}
 
 // DecodeWithoutVerify decodes the JWT string and returns the claims.
 // Note that this method does not verify the signature and always trust it.
@@ -78,8 +122,8 @@ func DecodePayloadAsRawJSON(s string) ([]byte, error) {
 	return payloadJSON, nil
 }
 
-func decodePayload(payload string) ([]byte, error) {
-	b, err := base64.URLEncoding.WithPadding(base64.NoPadding).DecodeString(payload)
+func decodePayload(payload string) (b []byte, err error) {
+	b, err = base64.URLEncoding.WithPadding(base64.NoPadding).DecodeString(payload)
 	if err != nil {
 		return nil, fmt.Errorf("invalid base64: %w", err)
 	}

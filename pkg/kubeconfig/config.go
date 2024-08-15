@@ -1,8 +1,8 @@
 package kubeconfig
 
 import (
+	"encoding/base64"
 	"github.com/hidevopsio/hiboot/pkg/at"
-	"github.com/hidevopsio/hiboot/pkg/utils/crypto/base64"
 	"github.com/hidevopsio/hiboot/pkg/utils/io"
 	"os"
 	"path/filepath"
@@ -51,7 +51,7 @@ func DefaultKubeconfig() string {
 func Kubeconfig(clusterInfo *ClusterInfo) (cfg *rest.Config, err error) {
 	defaultKubeconfigFile := DefaultKubeconfig()
 	if clusterInfo.Config != "" {
-		decodedConfig, decodeErr := base64.Decode([]byte(clusterInfo.Config))
+		decodedConfig, decodeErr := base64.URLEncoding.WithPadding(base64.StdPadding).DecodeString(clusterInfo.Config)
 		if decodeErr != nil {
 			err = decodeErr
 			log.Warnf("Error decoding base64 kubeconfig: %s", err.Error())
