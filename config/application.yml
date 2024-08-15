@@ -1,0 +1,25 @@
+
+app:
+  name: kube-starter
+
+oidc:
+  verify: true
+  publicKeys:
+    - "replace-with-your-public-key"
+
+kubeclient:
+  namespace: kube-system
+  qps: 500
+  burst: 1000
+  # select cluster from application config file as below
+  defaultClusterSelector: true
+  oidcScope: profile
+  clusters:
+    main:
+      name: main
+      # config is the content of kubeconfig in base64
+      #  if config is empty, use kubeconfig in $HOME/.kube/config in-cluster config
+      config: ""
+    dev:
+      name: dev
+      config: ""

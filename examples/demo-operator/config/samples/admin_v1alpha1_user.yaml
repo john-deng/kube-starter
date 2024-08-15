@@ -3,6 +3,8 @@ kind: User
 metadata:
   name: admin
 spec:
-  # Add fields here
-  name: Admin
+  age: 25
   email: admin@icloudnative.net
+  name: Admin
+  nickname: 管理员
+  phone: "13800138001"

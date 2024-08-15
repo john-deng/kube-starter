@@ -17,3 +17,7 @@ operator:
   leaderElectionID: ${app.name}-lock
   leaderElectionNamespace: kube-system
   leaseDuration: 10
+
+kubeclient:
+  qps: 500
+  burst: 1000

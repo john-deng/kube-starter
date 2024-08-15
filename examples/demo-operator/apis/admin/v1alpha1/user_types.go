@@ -29,8 +29,11 @@ type UserSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of User. Edit user_types.go to remove/update
-	Name string `json:"name,omitempty"`
-	Email string `json:"email,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Nickname string `json:"nickname,omitempty"`
+	Phone    string `json:"phone,omitempty"`
+	Email    string `json:"email,omitempty"`
+	Age      int8   `json:"age,omitempty"`
 }
 
 // UserStatus defines the observed state of User
